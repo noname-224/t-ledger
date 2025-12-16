@@ -6,8 +6,11 @@ authors = [
     {name = "Iliya Bound",email = "bound.forcoding@gmail.com"}
 ]
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.12,<3.15"
 dependencies = [
+    "aiogram (>=3.23.0,<4.0.0)",
+    "aiohttp[speedups] (>=3.13.2,<4.0.0)",
+    "pydantic-settings (>=2.12.0,<3.0.0)",
 ]
 
 
