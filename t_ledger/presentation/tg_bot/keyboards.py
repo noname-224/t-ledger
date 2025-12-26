@@ -1,35 +1,19 @@
 from aiogram.utils.keyboard import (
-    InlineKeyboardMarkup,
-    InlineKeyboardButton,
+    KeyboardButton,
+    ReplyKeyboardMarkup,
 )
 
+from t_ledger.presentation.tg_bot.constants import BotOption
 
-def start_window_buttons():
-    """Keyboard for the welcome message"""
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(
-                text="Аллокация портефеля",
-                callback_data="get_portfolio_allocation",
-            )],
-            [InlineKeyboardButton(
-                text="Уровни риска",
-                callback_data="get_risk_levels",
-            )],
-            [InlineKeyboardButton(
-                text="Стоимость портфеля",
-                callback_data="get_total_amount_portfolio"
-            )],
-        ],
-    )
 
-def cancel_button():
-    """"""
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(
-                text="Назад",
-                callback_data="cancel",
-            )],
+def main_keyboard():
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text=BotOption.TOTAL_AMOUNT_PORTFOLIO)],
+            [KeyboardButton(text=BotOption.PORTFOLIO_ALLOCATION)],
+            [KeyboardButton(text=BotOption.BOND_RISK_LEVELS)],
         ],
+        resize_keyboard=True,
+        is_persistent=True,
+        input_field_placeholder="Выберите пункт меню.",
     )
