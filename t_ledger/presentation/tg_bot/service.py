@@ -16,10 +16,10 @@ class WindowLoaderService:
         prepared_text = [
             (
                 f"{html.bold(instr.type.upper())}\n"
-                f"💰 Общая стоимость: {instr.total_amount.amount:.2f} {sign}\n"
+                f"💰 Общая стоимость: {instr.total_amount.amount:,.2f} {sign}\n"
                 f"📊 % аллокации: {instr.alloc_percent:.2f}%\n"
-                f"{"📈 Доход" if instr.daily_yield >= 0 else "📉 Убыток"}: {instr.daily_yield:.2f}"
-                f" {sign}"
+                f"{"📈 Доход" if instr.daily_yield >= 0 else "📉 Убыток"}: "
+                f"{instr.daily_yield:,.2f} {sign}"
             )
             for instr in alloc.active_instruments
         ]
@@ -52,8 +52,8 @@ class WindowLoaderService:
         data = await cls.service.get_total_amount_portfolio()
         sign = currency_to_sign.get(data.total_amount_portfolio.currency.upper(), "¤")
         prepared_text = (
-            f"💰 Общая стоимость: {data.total_amount_portfolio.amount:.2f} {sign}\n" 
-            f"{"📈 Доход" if data.daily_yield.amount >= 0 
-            else "📉 Убыток"}: {data.daily_yield.amount:.2f}"
+            f"💰 Общая стоимость: {data.total_amount_portfolio.amount:,.2f} {sign}\n" 
+            f"{"📈 Доход" if data.daily_yield.amount >= 0 else "📉 Убыток"}: "
+            f"{data.daily_yield.amount:,.2f}"
         )
         return prepared_text
