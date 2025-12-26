@@ -1,54 +1,74 @@
 from decimal import Decimal
 
-from t_ledger.application.mappers import PortfolioMapper
 from t_ledger.config import settings
-from t_ledger.constants import InstrumentType
 from t_ledger.domain.dtos import (
-    PortfolioDTO,
-    CategoryInfoDTO,
-    BondInfoDTO,
+    Allocation,
+    Bond,
+    InstrumentOut,
 )
-from t_ledger.domain.entities import Portfolio
+from t_ledger.domain.enums import (
+    InstrumentType,
+    RiskLevel,
+)
 from t_ledger.infra.client import TinkoffApiClient
 
 
-class SuperService:  # TODO я очень хочу подсказку
+class InvestmentService:
     api_client = TinkoffApiClient(settings.tbank.token)
 
-    async def __get_portfolio_domain(self) -> Portfolio:
-        data = await self.api_client.get_portfolio_data()
-        return PortfolioMapper.to_domain(PortfolioDTO.model_validate(data))
+    async def get_portfolio_allocation(self) -> Allocation:
+        portfolio = await self.api_client.get_portfolio()
 
-    async def __get_risk_levels_dto(self, positions):
-        data = await self.api_client.get_risk_level(positions)
-        return [BondInfoDTO.model_validate(item) for item in data]
-
-    async def get_portfolio_allocation(self) -> list[CategoryInfoDTO]:
-        portfolio = await self.__get_portfolio_domain()
-
-        categories_info = [
-            CategoryInfoDTO(
-                amount=category.amount.amount,
-                category=category.category,
-                currency=category.amount.currency,
-                percentage=round(
-                    category.amount.amount / portfolio.total_amount.amount * 100, 2
-                ),
+        daily_yield_by_types = {}
+        for pos in portfolio.positions:
+            daily_yield_by_types[pos.instrument_type] = (
+                daily_yield_by_types.get(pos.instrument_type, Decimal("0")) +
+                pos.daily_yield.amount
             )
-            for category in portfolio.amounts_by_category
-            if category.amount.amount > Decimal("0")
-        ]
 
-        return sorted(categories_info, key=lambda c: c.amount, reverse=True)
+        active_instruments = sorted(
+            (
+                InstrumentOut(
+                    type=instr.type,
+                    total_amount=instr.total_amount,
+                    alloc_percent=(
+                        instr.total_amount.amount / portfolio.total_amount_portfolio.amount * 100
+                    ),
+                    daily_yield=daily_yield_by_types[instr.type],
+                )
+                for instr in portfolio.instruments
+                if instr.type in daily_yield_by_types
+            ),
+            key=lambda x: x.total_amount.amount,
+            reverse=True,
+        )
 
-    async def get_positions_risk_levels(self) -> list[BondInfoDTO]:
-        portfolio = await self.__get_portfolio_domain()
+        allocation = Allocation(
+            active_instruments=active_instruments,
+            currency=portfolio.total_amount_portfolio.currency,
+        )
 
-        bonds = [
-            position
-            for position in portfolio.positions
-            if position.instrument_type == InstrumentType.BOND
-        ]
-        risk_levels = await self.__get_risk_levels_dto(bonds)
+        return allocation
 
-        return risk_levels
+    async def get_bonds(self) -> dict[RiskLevel: Bond]:
+        portfolio = await self.api_client.get_portfolio()
+
+        bond_positions = list(
+            filter(lambda x: x.instrument_type == InstrumentType.BOND, portfolio.positions)
+        )
+        bonds = await self.api_client.get_bonds(bond_positions)
+
+        bonds_by_risk_levels = {
+            RiskLevel.LOW: [],
+            RiskLevel.MODERATE: [],
+            RiskLevel.HIGH: [],
+            RiskLevel.UNSPECIFIED: [],
+        }
+        for bond in bonds:
+            bonds_by_risk_levels[bond.risk_level] = bonds_by_risk_levels[bond.risk_level] + [bond]
+
+        result = {
+            risk_level: sorted(bonds, key=lambda x: x.name)
+            for risk_level, bonds in bonds_by_risk_levels.items()
+        }
+        return result
