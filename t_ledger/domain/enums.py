@@ -18,16 +18,6 @@ class Currency(StrEnum):
     USD = "usd"
 
 
-class AssetCategory(StrEnum):
-    BONDS = "bonds"
-    CURRENCIES = "currencies"
-    ETF = "etf"
-    FUTURES = "futures"
-    OPTIONS = "options"
-    SHARES = "shares"
-    SP = "sp"
-
-
 class InstrumentType(StrEnum):
     BOND = "bond"
     CURRENCY = "currency"
@@ -38,12 +28,17 @@ class InstrumentType(StrEnum):
     SP = "sp"
 
 
-class IdType(StrEnum):
+class InstrumentIdType(StrEnum):
     UID = "INSTRUMENT_ID_TYPE_UID"
 
 
 class RiskLevel(StrEnum):
-    RISK_LEVEL_UNSPECIFIED = "RISK_LEVEL_UNSPECIFIED"
-    RISK_LEVEL_LOW = "RISK_LEVEL_LOW"
-    RISK_LEVEL_MODERATE = "RISK_LEVEL_MODERATE"
-    RISK_LEVEL_HIGH = "RISK_LEVEL_HIGH"
+    UNSPECIFIED = "RISK_LEVEL_UNSPECIFIED"
+    LOW = "RISK_LEVEL_LOW"
+    MODERATE = "RISK_LEVEL_MODERATE"
+    HIGH = "RISK_LEVEL_HIGH"
+
+
+class BondType(StrEnum):
+    UNSPECIFIED = "BOND_TYPE_UNSPECIFIED"
+    REPLACED = "BOND_TYPE_REPLACED"
