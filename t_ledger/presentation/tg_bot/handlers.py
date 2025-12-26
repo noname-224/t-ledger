@@ -36,3 +36,10 @@ async def handle_button(call: CallbackQuery) -> None:
     await call.message.edit_text(
         await WindowLoaderService.load_bonds_risk_levels(), reply_markup=cancel_button()
     )
+
+
+@dp.callback_query(F.data == "get_total_amount_portfolio")
+async def handle_button(call: CallbackQuery) -> None:
+    await call.message.edit_text(
+        await WindowLoaderService.load_total_amount_portfolio(), reply_markup=cancel_button()
+    )

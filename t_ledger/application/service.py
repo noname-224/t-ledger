@@ -5,6 +5,7 @@ from t_ledger.domain.dtos import (
     Allocation,
     Bond,
     InstrumentOut,
+    Portfolio,
 )
 from t_ledger.domain.enums import (
     InstrumentType,
@@ -72,3 +73,6 @@ class InvestmentService:
             for risk_level, bonds in bonds_by_risk_levels.items()
         }
         return result
+
+    async def get_total_amount_portfolio(self) -> Portfolio:
+        return await self.api_client.get_portfolio()
