@@ -1,4 +1,7 @@
+import asyncio
+import datetime
 from decimal import Decimal
+from pprint import pprint
 
 from t_ledger.config import settings
 from t_ledger.domain.dtos import (
@@ -6,16 +9,24 @@ from t_ledger.domain.dtos import (
     Bond,
     InstrumentOut,
     Portfolio,
+    Position, Coupon,
 )
 from t_ledger.domain.enums import (
     InstrumentType,
-    RiskLevel,
+    RiskLevel, CouponType,
 )
 from t_ledger.infra.client import TinkoffApiClient
 
 
 class InvestmentService:
     api_client = TinkoffApiClient(settings.tbank.token)
+
+    @staticmethod
+    def __get_bond_positions(portfolio: Portfolio) -> list[Position]:
+        return [*filter(
+            lambda x: x.instrument_type == InstrumentType.BOND,
+            portfolio.positions,
+        )]
 
     async def get_portfolio_allocation(self) -> Allocation:
         portfolio = await self.api_client.get_portfolio()
@@ -53,10 +64,7 @@ class InvestmentService:
 
     async def get_bonds(self) -> dict[RiskLevel: Bond]:
         portfolio = await self.api_client.get_portfolio()
-
-        bond_positions = list(
-            filter(lambda x: x.instrument_type == InstrumentType.BOND, portfolio.positions)
-        )
+        bond_positions = self.__get_bond_positions(portfolio)
         bonds = await self.api_client.get_bonds(bond_positions)
 
         bonds_by_risk_levels = {
@@ -76,3 +84,23 @@ class InvestmentService:
 
     async def get_total_amount_portfolio(self) -> Portfolio:
         return await self.api_client.get_portfolio()
+
+    async def get_future_bond_payments(self):
+        portfolio = await self.api_client.get_portfolio()
+        bond_positions = self.__get_bond_positions(portfolio)
+
+        bond = await self.api_client.get_bonds(bond_positions)
+        bonds_coupons = await self.api_client.get_bonds_coupons(bond)
+
+        for bond_coupons in bonds_coupons:
+            for coupon in bond_coupons.coupons:
+                if coupon.coupon_date > datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=30):
+                    print(coupon)
+
+if __name__ == "__main__":
+    async def main():
+        service = InvestmentService()
+        await service.get_future_bond_payments()
+
+
+    asyncio.run(main())

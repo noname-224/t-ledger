@@ -12,6 +12,11 @@ _BASE_DIR: Path = Path(__file__).resolve().parent.parent
 
 class TGBotConfig(BaseModel):
     token: str
+    ids_allowed_users_str: str
+
+    @property
+    def ids_allowed_users(self) -> set:
+        return set(map(int, self.ids_allowed_users_str.strip().split("|")))
 
 
 class TBankConfig(BaseModel):

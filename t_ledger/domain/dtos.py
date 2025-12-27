@@ -1,3 +1,4 @@
+from datetime import datetime
 from decimal import Decimal
 
 from pydantic import (
@@ -10,7 +11,7 @@ from t_ledger.domain.enums import (
     BondType,
     Currency,
     RiskLevel,
-    InstrumentType,
+    InstrumentType, CouponType,
 )
 
 
@@ -88,3 +89,15 @@ class Bond(BaseDTO):
 class Allocation(BaseDTO):
     active_instruments: list[InstrumentOut]
     currency: Currency
+
+
+class Coupon(BaseDTO):
+    coupon_date: datetime
+    coupon_type: CouponType
+    fix_date: datetime
+    pay_one_bond: Money | None = None
+
+
+class BondWithCoupons(BaseDTO):
+    name: str
+    coupons: list[Coupon]

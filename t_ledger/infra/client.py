@@ -1,3 +1,6 @@
+import asyncio
+from datetime import datetime, timezone, timedelta
+from pprint import pprint
 from typing import Any
 
 from aiohttp import ClientSession
@@ -8,13 +11,13 @@ from t_ledger.domain.dtos import (
     Bond,
     Instrument,
     Portfolio,
-    Position,
+    Position, Coupon, BondWithCoupons,
 )
 from t_ledger.domain.enums import (
     Method,
     Currency,
     Endpoint,
-    InstrumentIdType,
+    InstrumentIdType, CouponType,
 )
 
 
@@ -91,7 +94,7 @@ class TinkoffApiClient:
         )
         return portfolio
 
-    async def get_bonds(self,  positions: list[Position]) -> list[Bond]:
+    async def get_bonds(self, positions: list[Position]) -> list[Bond]:
         async with ClientSession() as session:
             data = [
                 Bond.model_validate((await self.__make_request(
@@ -103,3 +106,40 @@ class TinkoffApiClient:
                 for position in positions
             ]
         return data
+
+    async def get_bonds_coupons(self, bonds: list[Bond]) -> list[BondWithCoupons]:
+        async with ClientSession() as session:
+            # from_ = datetime.now(timezone.utc)
+            # to_ = from_ + timedelta(days=366)
+
+            bonds_coupons = []
+            for bond in bonds:
+                cur_coupons = (await self.__make_request(
+                    session=session,
+                    method=Method.POST,
+                    endpoint=Endpoint.GET_BOND_COUPONS,
+                    json={
+                        "instrumentId": bond.uid,
+                        "to": (datetime.now(timezone.utc) + timedelta(days=365)).isoformat(),
+                    },
+                ))["events"]
+
+                bonds_coupons.append(
+                    BondWithCoupons(
+                        name=bond.name,
+                        coupons=[Coupon(**coupon) for coupon in cur_coupons],
+                    )
+                )
+
+        return bonds_coupons
+
+
+
+if __name__ == "__main__":
+    async def main():
+        client = TinkoffApiClient(settings.tbank.token)
+        portfolio = await client.get_portfolio()
+        coupon = await client.get_bonds_coupons(portfolio.positions[0].instrument_uid)
+        pprint(coupon)
+
+    asyncio.run(main())
