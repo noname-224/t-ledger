@@ -10,10 +10,12 @@ from aiogram.types import Message
 
 from t_ledger.presentation.tg_bot.constants import BotOption
 from t_ledger.presentation.tg_bot.keyboards import main_keyboard
+from t_ledger.presentation.tg_bot.middlewares import AccessMiddleware
 from t_ledger.presentation.tg_bot.service import WindowLoaderService
 
 
 dp = Dispatcher()
+dp.message.outer_middleware(AccessMiddleware())
 
 
 @dp.message(CommandStart())
