@@ -6,13 +6,24 @@ from aiogram.filters import (
     CommandStart,
     Command,
 )
-from aiogram.types import Message
+from aiogram.fsm.context import FSMContext
+from aiogram.types import Message, CallbackQuery
 
+from t_ledger.application.service import InvestmentService
 from t_ledger.presentation.tg_bot.constants import (
     BotCommandOption,
     BotMessageOption,
     WINDOW_UNAVAILABLE_TEXT,
 )
+from t_ledger.presentation.tg_bot.coupon_screen import (
+    CouponPagination,
+    build_coupon_keyboard,
+    YearMonth,
+    CouponNavigation,
+    CouponState,
+    render_coupon_month,
+)
+
 from t_ledger.presentation.tg_bot.keyboards import main_keyboard
 from t_ledger.presentation.tg_bot.middlewares import AccessMiddleware
 from t_ledger.presentation.tg_bot.service import WindowLoaderService
@@ -53,3 +64,47 @@ async def handle(message: Message) -> None:
 async def handle_button(message: Message) -> None:
     await message.answer(
         await WindowLoaderService.load_bonds_risk_levels())
+
+
+@dp.message(F.text == BotMessageOption.FUTURE_BOND_PAYMENTS)
+@dp.message(Command(BotCommandOption.FUTURE_BOND_PAYMENTS))
+async def show_future_coupons(message: Message, state: FSMContext) -> None:
+    data = await InvestmentService().get_future_bond_payments()
+
+    navigation = CouponNavigation(data)
+    ym = navigation.first()
+
+    await state.set_state(CouponState.browsing)
+    await state.update_data(coupons=data)
+
+    text = render_coupon_month(ym, navigation.get(ym))
+    keyboard = build_coupon_keyboard(ym, navigation)
+
+    msg = await message.answer(text, reply_markup=keyboard)
+
+    await state.update_data(active_msg_id=msg.message_id)
+
+
+@dp.callback_query(CouponPagination.filter(), CouponState.browsing)
+async def paginate_coupons(
+    callback: CallbackQuery,
+    callback_data: CouponPagination,
+    state: FSMContext
+) -> None:
+    data = await state.get_data()
+
+    if callback.message.message_id != data["active_msg_id"]:
+        await callback.answer(WINDOW_UNAVAILABLE_TEXT, show_alert=True)
+        return
+
+    navigation = CouponNavigation(data["coupons"])
+    ym = YearMonth(callback_data.year, callback_data.month)
+
+    if not navigation.exists(ym):
+        await callback.answer()
+        return
+
+    text = render_coupon_month(ym, navigation.get(ym))
+    keyboard = build_coupon_keyboard(ym, navigation)
+
+    await callback.message.edit_text(text, reply_markup=keyboard)
