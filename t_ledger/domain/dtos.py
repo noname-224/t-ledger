@@ -8,10 +8,10 @@ from pydantic import (
 from pydantic.alias_generators import to_camel
 
 from t_ledger.domain.enums import (
-    BondType,
+    CouponType,
     Currency,
     RiskLevel,
-    InstrumentType, CouponType,
+    InstrumentType,
 )
 
 
@@ -30,7 +30,7 @@ class Quantity(BaseDTO):
 
     @property
     def value(self) -> Decimal:
-        return self.units + self.nano / Decimal(1e9)
+        return self.units
 
 
 class Money(BaseDTO):
@@ -72,18 +72,12 @@ class Portfolio(BaseDTO):
 
 
 class Bond(BaseDTO):
-    asset_uid: str
-    bond_type: BondType
     country_of_risk: str
-    country_of_risk_name: str
-    coupon_quantity_per_year: int
     currency: Currency
     name: str
-    nominal: Money
-    position_uid: str
     risk_level: RiskLevel
-    sector: str
     uid: str
+    quantity: Quantity | None = None
 
 
 class Allocation(BaseDTO):
@@ -92,12 +86,15 @@ class Allocation(BaseDTO):
 
 
 class Coupon(BaseDTO):
+    bond_name: str
+    quantity: Quantity
     coupon_date: datetime
     coupon_type: CouponType
     fix_date: datetime
-    pay_one_bond: Money | None = None
+    pay_one_bond: Money
 
 
 class BondWithCoupons(BaseDTO):
     name: str
+    quantity: Quantity
     coupons: list[Coupon]

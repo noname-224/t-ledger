@@ -10,9 +10,3 @@ instrument_types = {
     "totalAmountShares": InstrumentType.SHARE,
     "totalAmountSp": InstrumentType.SP,
 }
-
-currency_to_sign = {
-    "EUR": "€",
-    "RUB": "₽",
-    "USD": "$",
-}

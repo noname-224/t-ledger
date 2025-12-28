@@ -9,15 +9,17 @@ from t_ledger.config import settings
 from t_ledger.domain.constants import instrument_types
 from t_ledger.domain.dtos import (
     Bond,
+    BondWithCoupons,
+    Coupon,
     Instrument,
     Portfolio,
-    Position, Coupon, BondWithCoupons,
+    Position,
 )
 from t_ledger.domain.enums import (
     Method,
     Currency,
     Endpoint,
-    InstrumentIdType, CouponType,
+    InstrumentIdType,
 )
 
 

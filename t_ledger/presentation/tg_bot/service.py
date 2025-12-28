@@ -1,8 +1,8 @@
 from aiogram import html
 
 from t_ledger.application.service import InvestmentService
-from t_ledger.domain.constants import currency_to_sign
 from t_ledger.domain.enums import RiskLevel
+from t_ledger.presentation.tg_bot.constants import currency_to_sign
 
 
 class WindowLoaderService:
@@ -11,7 +11,7 @@ class WindowLoaderService:
     @classmethod
     async def load_portfolio_allocation_info(cls):
         alloc = await cls.service.get_portfolio_allocation()
-        sign = currency_to_sign.get(alloc.currency.upper(), "¤")
+        sign = currency_to_sign.get(alloc.currency, "¤")
 
         prepared_text = [
             (
@@ -50,10 +50,11 @@ class WindowLoaderService:
     @classmethod
     async def load_total_amount_portfolio(cls):
         data = await cls.service.get_total_amount_portfolio()
-        sign = currency_to_sign.get(data.total_amount_portfolio.currency.upper(), "¤")
+        sign = currency_to_sign.get(data.total_amount_portfolio.currency, "¤")
+
         prepared_text = (
             f"💰 Общая стоимость: {data.total_amount_portfolio.amount:,.2f} {sign}\n" 
-            f"{"📈 Доход" if data.daily_yield.amount >= 0 else "📉 Убыток"}: "
+            f"{"📈 Дневной доход" if data.daily_yield.amount >= 0 else "📉 Дневной убыток"}: "
             f"{data.daily_yield.amount:,.2f}"
         )
         return prepared_text

@@ -13,7 +13,7 @@ from t_ledger.domain.dtos import (
 )
 from t_ledger.domain.enums import (
     InstrumentType,
-    RiskLevel, CouponType,
+    RiskLevel,
 )
 from t_ledger.infra.client import TinkoffApiClient
 
