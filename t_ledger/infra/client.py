@@ -1,6 +1,4 @@
-import asyncio
 from datetime import datetime, timezone, timedelta
-from pprint import pprint
 from typing import Any
 
 from aiohttp import ClientSession
@@ -96,23 +94,30 @@ class TinkoffApiClient:
         )
         return portfolio
 
-    async def get_bonds(self, positions: list[Position]) -> list[Bond]:
+    async def get_bonds(self, bond_positions: list[Position]) -> list[Bond]:
         async with ClientSession() as session:
-            data = [
-                Bond.model_validate((await self.__make_request(
+            bonds = []
+            for bond_pos in bond_positions:
+                data = (await self.__make_request(
                     session=session,
                     method=Method.POST,
                     endpoint=Endpoint.GET_BOND_BY,
-                    json={"idType": InstrumentIdType.UID, "id": position.instrument_uid},
-                ))["instrument"])
-                for position in positions
-            ]
-        return data
+                    json={"idType": InstrumentIdType.UID, "id": bond_pos.instrument_uid},
+                ))["instrument"]
+
+                bonds.append(Bond(
+                    country_of_risk=data["countryOfRisk"],
+                    currency=data["currency"],
+                    name=data["name"],
+                    risk_level=data["riskLevel"],
+                    uid=data["uid"],
+                    quantity=bond_pos.quantity,
+                ))
+
+        return bonds
 
     async def get_bonds_coupons(self, bonds: list[Bond]) -> list[BondWithCoupons]:
         async with ClientSession() as session:
-            # from_ = datetime.now(timezone.utc)
-            # to_ = from_ + timedelta(days=366)
 
             bonds_coupons = []
             for bond in bonds:
@@ -129,19 +134,19 @@ class TinkoffApiClient:
                 bonds_coupons.append(
                     BondWithCoupons(
                         name=bond.name,
-                        coupons=[Coupon(**coupon) for coupon in cur_coupons],
+                        quantity=bond.quantity,
+                        coupons=[
+                            Coupon(
+                                bond_name=bond.name,
+                                quantity=bond.quantity,
+                                coupon_date=coupon["couponDate"],
+                                coupon_type=coupon["couponType"],
+                                fix_date=coupon["fixDate"],
+                                pay_one_bond=coupon["payOneBond"],
+
+                            ) for coupon in cur_coupons
+                        ],
                     )
                 )
 
         return bonds_coupons
-
-
-
-if __name__ == "__main__":
-    async def main():
-        client = TinkoffApiClient(settings.tbank.token)
-        portfolio = await client.get_portfolio()
-        coupon = await client.get_bonds_coupons(portfolio.positions[0].instrument_uid)
-        pprint(coupon)
-
-    asyncio.run(main())
