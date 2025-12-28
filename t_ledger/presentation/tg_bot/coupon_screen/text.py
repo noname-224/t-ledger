@@ -1,5 +1,3 @@
-from decimal import Decimal
-
 from aiogram import html
 
 from t_ledger.domain.dtos import MonthlyCouponIncome, Coupon
@@ -16,8 +14,7 @@ def render_coupon_month(ym: YearMonth, month_data: MonthlyCouponIncome) -> str:
         month_data.coupons[0].pay_one_bond.currency, "¤")
 
 
-    # total_income = f"{month_data.total_income:,.2f}"
-    total_income = f"{Decimal("999999.99"):,.2f}"
+    total_income = f"{month_data.total_income:,.2f}"
     for coupon in month_data.coupons:
         lines.append(_render_coupon_line(
             coupon=coupon,
