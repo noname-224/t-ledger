@@ -1,15 +1,16 @@
-import asyncio
 import datetime
 from decimal import Decimal
-from pprint import pprint
 
 from t_ledger.config import settings
 from t_ledger.domain.dtos import (
     Allocation,
+    AnnualCouponIncome,
     Bond,
+    Coupon,
     InstrumentOut,
+    MonthlyCouponIncome,
     Portfolio,
-    Position, Coupon,
+    Position,
 )
 from t_ledger.domain.enums import (
     InstrumentType,
@@ -27,6 +28,20 @@ class InvestmentService:
             lambda x: x.instrument_type == InstrumentType.BOND,
             portfolio.positions,
         )]
+
+    @staticmethod
+    def __get_coupon_list_from_prev_payment(coupons: list[Coupon]) -> list[Coupon]:
+        coupons_in_ascending_order = list(reversed(coupons))
+        left, right = 0, len(coupons_in_ascending_order) - 1
+
+        while left <= right:
+            mid = left + (right - left) // 2
+            if coupons_in_ascending_order[mid].coupon_date > datetime.datetime.now(datetime.timezone.utc):
+                right = mid - 1
+            else:
+                left = mid + 1
+
+        return coupons_in_ascending_order[left - 1:]
 
     async def get_portfolio_allocation(self) -> Allocation:
         portfolio = await self.api_client.get_portfolio()
@@ -85,22 +100,47 @@ class InvestmentService:
     async def get_total_amount_portfolio(self) -> Portfolio:
         return await self.api_client.get_portfolio()
 
-    async def get_future_bond_payments(self):
+    async def get_future_bond_payments(self) -> list[AnnualCouponIncome]:
         portfolio = await self.api_client.get_portfolio()
         bond_positions = self.__get_bond_positions(portfolio)
 
-        bond = await self.api_client.get_bonds(bond_positions)
-        bonds_coupons = await self.api_client.get_bonds_coupons(bond)
+        bonds = await self.api_client.get_bonds(bond_positions)
+        bonds_coupons = await self.api_client.get_bonds_coupons(bonds)
 
+        result: dict[str: dict[str: [Coupon]]] = {}
         for bond_coupons in bonds_coupons:
-            for coupon in bond_coupons.coupons:
-                if coupon.coupon_date > datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=30):
-                    print(coupon)
 
-if __name__ == "__main__":
-    async def main():
-        service = InvestmentService()
-        await service.get_future_bond_payments()
+            coupons = self.__get_coupon_list_from_prev_payment(bond_coupons.coupons)
+            for i in range(1, len(coupons)):
 
+                if coupons[i].pay_one_bond.amount == Decimal("0"):
+                    pay_one_bond = coupons[i - 1].pay_one_bond
+                    coupons[i].pay_one_bond = pay_one_bond  # TODO !Изменение pydantic модели!
+                result.setdefault(
+                    coupons[i].coupon_date.year, {}).setdefault(
+                    coupons[i].coupon_date.month, []).append(coupons[i])
 
-    asyncio.run(main())
+        years = []
+        for year, data in result.items():
+
+            months, year_total = [], Decimal("0")
+            for month, coupons in data.items():
+
+                month_total = Decimal("0")
+                for coupon in coupons:
+                    month_total += coupon.pay_one_bond.amount * coupon.quantity.value
+
+                months.append(MonthlyCouponIncome(
+                    month=month,
+                    coupons=sorted(coupons, key=lambda x: x.coupon_date),
+                    total_income=month_total,
+                ))
+                year_total += month_total
+
+            years.append(AnnualCouponIncome(
+                year=year,
+                months=sorted(months, key=lambda x: x.month),
+                total_income=year_total,
+            ))
+
+        return sorted(years, key=lambda x: x.year)

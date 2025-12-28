@@ -98,3 +98,15 @@ class BondWithCoupons(BaseDTO):
     name: str
     quantity: Quantity
     coupons: list[Coupon]
+
+
+class MonthlyCouponIncome(BaseDTO):
+    month: int
+    coupons: list[Coupon]
+    total_income: Decimal
+
+
+class AnnualCouponIncome(BaseDTO):
+    year: int
+    months: list[MonthlyCouponIncome]
+    total_income: Decimal
