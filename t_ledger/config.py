@@ -1,10 +1,7 @@
 from pathlib import Path
 
 from pydantic import BaseModel
-from pydantic_settings import (
-    BaseSettings,
-    SettingsConfigDict,
-)
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 _BASE_DIR: Path = Path(__file__).resolve().parent.parent
@@ -12,11 +9,11 @@ _BASE_DIR: Path = Path(__file__).resolve().parent.parent
 
 class TGBotConfig(BaseModel):
     token: str
-    ids_allowed_users_str: str
+    allowed_user_ids_str: str
 
     @property
-    def ids_allowed_users(self) -> set:
-        return set(map(int, self.ids_allowed_users_str.strip().split("|")))
+    def allowed_user_ids(self) -> set:
+        return set(map(int, self.allowed_user_ids_str.strip().split("|")))
 
 
 class TBankConfig(BaseModel):
