@@ -1,15 +1,10 @@
-from aiogram.utils.keyboard import (
-    KeyboardButton,
-    ReplyKeyboardMarkup,
-)
+from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 
-from t_ledger.presentation.tg_bot.constants import (
-    BotMessageOption,
-    PLACE_HOLDER,
-)
+from t_ledger.presentation.telegram.contracts.messages import BotMessageOption
+from t_ledger.presentation.telegram.texts.common import INPUT_PLACE_HOLDER
 
 
-def main_keyboard() -> ReplyKeyboardMarkup:
+def main_menu_keyboard() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text=BotMessageOption.TOTAL_AMOUNT_PORTFOLIO)],
@@ -19,5 +14,5 @@ def main_keyboard() -> ReplyKeyboardMarkup:
         ],
         resize_keyboard=True,
         is_persistent=True,
-        input_field_placeholder=PLACE_HOLDER,
+        input_field_placeholder=INPUT_PLACE_HOLDER,
     )

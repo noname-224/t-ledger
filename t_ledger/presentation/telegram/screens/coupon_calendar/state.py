@@ -1,5 +1,5 @@
 from aiogram.fsm.state import StatesGroup, State
 
 
-class CouponState(StatesGroup):
+class CouponCalendarState(StatesGroup):
     browsing = State()

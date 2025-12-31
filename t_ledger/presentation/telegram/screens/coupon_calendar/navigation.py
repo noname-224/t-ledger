@@ -1,20 +1,21 @@
-from t_ledger.domain.dtos import AnnualCouponIncome, MonthlyCouponIncome
+from t_ledger.domain.models.core import MonthlyCouponIncome, AnnualCouponIncome
+from t_ledger.presentation.shared.models import YearMonth
 
-from .models import YearMonth
 
-
-class CouponNavigation:
+class CouponCalendarTimeline:
     def __init__(self, data: list[AnnualCouponIncome]):
         self._months: list[YearMonth] = []
+        self._indexes: dict[YearMonth, int] = {}
         self._data: dict[YearMonth, MonthlyCouponIncome] = {}
 
         for year_data in data:
-            for month_data in year_data.months:
+            for month_data in year_data.monthly_incomes:
                 ym = YearMonth(year=year_data.year, month=month_data.month)
                 self._months.append(ym)
                 self._data[ym] = month_data
 
         self._months.sort()
+        self._indexes = {ym: idx for idx, ym in enumerate(self._months)}
 
     def first(self) -> YearMonth:
         return self._months[0]
@@ -32,7 +33,7 @@ class CouponNavigation:
         if ym not in self._data:
             return None
 
-        idx = self._months.index(ym)
+        idx = self._indexes[ym]
         if idx == 0:
             return None
 
@@ -42,8 +43,17 @@ class CouponNavigation:
         if ym not in self._data:
             return None
 
-        idx = self._months.index(ym)
+        idx = self._indexes[ym]
         if idx == len(self._months) - 1:
             return None
 
         return self._months[idx + 1]
+
+    def shift(self, ym: YearMonth, delta: int) -> YearMonth | None:
+        if ym not in self._indexes:
+            return None
+
+        idx = self._indexes[ym] + delta
+        if 0 <= idx < len(self._months):
+            return self._months[idx]
+        return None
