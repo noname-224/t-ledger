@@ -2,14 +2,12 @@ from dependency_injector import containers, providers
 
 from t_ledger.application.portfolio_service import PortfolioService
 from t_ledger.config import settings
+from t_ledger.infra.repositories import InMemoryCouponRepository
 from t_ledger.infra.api.client import TinkoffApiClient
 from t_ledger.presentation.telegram.presenters.portfolio import PortfolioPresenter
 
 
 class Container(containers.DeclarativeContainer):
-
-    wiring_config = containers.WiringConfiguration(
-        )
 
     tinkoff_api_client = providers.Singleton(
         TinkoffApiClient,
@@ -25,4 +23,8 @@ class Container(containers.DeclarativeContainer):
     portfolio_presenter = providers.Factory(
         PortfolioPresenter,
         portfolio_service=portfolio_service,
+    )
+
+    coupon_repository = providers.Singleton(
+        InMemoryCouponRepository,
     )
