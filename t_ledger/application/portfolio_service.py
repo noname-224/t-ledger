@@ -1,5 +1,7 @@
 from decimal import Decimal
 
+from aiohttp import ClientSession
+
 from t_ledger.application.utils import now
 from t_ledger.domain.enums.core import RiskLevel
 from t_ledger.domain.enums.currency import Currency
@@ -16,7 +18,8 @@ class PortfolioService:
         self._api_client = api_client
 
     async def get_portfolio(self) -> Portfolio | None:
-        raw_portfolio = await self._api_client.get_portfolio_raw()
+        async with ClientSession() as session:
+            raw_portfolio = await self._api_client.get_portfolio_raw(session)
         if raw_portfolio is None:
             return None
 
@@ -106,7 +109,8 @@ class PortfolioService:
         bond_positions = list(
             filter(lambda x: x.instrument_type == InstrumentType.BOND, portfolio.positions))
 
-        raw_bonds = await self._api_client.get_bonds_raw(bond_positions)
+        async with ClientSession() as session:
+            raw_bonds = await self._api_client.get_bonds_raw(session, bond_positions=bond_positions)
 
         return [
             Bond(
@@ -142,25 +146,29 @@ class PortfolioService:
     async def _get_coupons_by_bonds(self, bonds: list[Bond]) -> list[BondWithCouponSchedule]:
         coupons_by_bonds = []
 
-        for bond in bonds:
-            raw_coupons = await self._api_client.get_coupons_by_bond_raw(bond.instrument_uid)
-
-            coupons_by_bonds.append(
-                BondWithCouponSchedule(
-                    name=bond.name,
-                    quantity=bond.quantity,
-                    coupons=[
-                        Coupon(
-                            bond_name=bond.name,
-                            quantity=bond.quantity,
-                            coupon_date=raw_coupon.coupon_date,
-                            coupon_type=raw_coupon.coupon_type,
-                            amount_per_bond=Money.from_api(raw_coupon.amount_per_bond),
-                        )
-                        for raw_coupon in raw_coupons
-                    ]
+        async with ClientSession() as session:
+            for bond in bonds:
+                raw_coupons = await self._api_client.get_coupons_by_bond_raw(
+                    session,
+                    bond_uid=bond.instrument_uid,
                 )
-            )
+
+                coupons_by_bonds.append(
+                    BondWithCouponSchedule(
+                        name=bond.name,
+                        quantity=bond.quantity,
+                        coupons=[
+                            Coupon(
+                                bond_name=bond.name,
+                                quantity=bond.quantity,
+                                coupon_date=raw_coupon.coupon_date,
+                                coupon_type=raw_coupon.coupon_type,
+                                amount_per_bond=Money.from_api(raw_coupon.amount_per_bond),
+                            )
+                            for raw_coupon in raw_coupons
+                        ]
+                    )
+                )
 
         return coupons_by_bonds
 

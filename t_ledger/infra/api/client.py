@@ -44,18 +44,17 @@ class TinkoffApiClient:
         except (KeyError, IndexError):
             return None
 
-    async def get_portfolio_raw(self) -> RawPortfolio | None:
-        async with ClientSession() as session:
-            account = await self._get_account(session)
-            if account is None:
-                return None
+    async def get_portfolio_raw(self, session: ClientSession) -> RawPortfolio | None:
+        account = await self._get_account(session)
+        if account is None:
+            return None
 
-            data = await self._request(
-                session,
-                method=Method.POST,
-                endpoint=Endpoint.GET_PORTFOLIO,
-                json={"accountId": account.id, "currency": "RUB"}
-            )
+        data = await self._request(
+            session,
+            method=Method.POST,
+            endpoint=Endpoint.GET_PORTFOLIO,
+            json={"accountId": account.id, "currency": "RUB"}
+        )
 
         positions = [
             RawPosition(
@@ -84,38 +83,46 @@ class TinkoffApiClient:
             total_amounts_by_instrument=total_amounts_by_instrument,
         )
 
-    async def get_bonds_raw(self, bond_positions: list[Position]) -> list[RawBond]:
-        async with ClientSession() as session:
-            raw_bonds = []
+    async def get_bonds_raw(
+        self,
+        session: ClientSession,
+        *,
+        bond_positions: list[Position]
+    ) -> list[RawBond]:
+        raw_bonds = []
 
-            for position in bond_positions:
-                data = (await self._request(
-                    session,
-                    method=Method.POST,
-                    endpoint=Endpoint.GET_BOND_BY,
-                    json={"idType": INSTRUMENT_ID_TYPE_UID, "id": position.instrument_uid}
-                ))["instrument"]
-
-                raw_bonds.append(
-                    RawBond(
-                        instrument_uid=data["uid"],
-                        currency=data["currency"],
-                        name=data["name"],
-                        risk_level=data["riskLevel"],
-                        country_of_risk=data["countryOfRisk"],
-                    )
-                )
-
-        return raw_bonds
-
-    async def get_coupons_by_bond_raw(self, bond_uid: str) -> list[RawCoupon]:
-        async with ClientSession() as session:
+        for position in bond_positions:
             data = (await self._request(
                 session,
                 method=Method.POST,
-                endpoint=Endpoint.GET_BOND_COUPONS,
-                json={"instrumentId": bond_uid, "to": COUPONS_BY_BONDS_END_DATE}
-            ))
+                endpoint=Endpoint.GET_BOND_BY,
+                json={"idType": INSTRUMENT_ID_TYPE_UID, "id": position.instrument_uid}
+            ))["instrument"]
+
+            raw_bonds.append(
+                RawBond(
+                    instrument_uid=data["uid"],
+                    currency=data["currency"],
+                    name=data["name"],
+                    risk_level=data["riskLevel"],
+                    country_of_risk=data["countryOfRisk"],
+                )
+            )
+
+        return raw_bonds
+
+    async def get_coupons_by_bond_raw(
+        self,
+        session: ClientSession,
+        *,
+        bond_uid: str
+    ) -> list[RawCoupon]:
+        data = (await self._request(
+            session,
+            method=Method.POST,
+            endpoint=Endpoint.GET_BOND_COUPONS,
+            json={"instrumentId": bond_uid, "to": COUPONS_BY_BONDS_END_DATE}
+        ))
 
         return [
             RawCoupon(
