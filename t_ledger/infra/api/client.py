@@ -1,8 +1,9 @@
 import asyncio
+from typing import Any
 
 from aiohttp import ClientSession
 
-from t_ledger.domain.models.core import Position
+from t_ledger.domain.exceptions import ApiClientRequestError
 from t_ledger.infra.api.enums import Endpoint, Method
 from t_ledger.infra.api.raw_models import RawAccount, RawPortfolio, RawPosition, RawBond, RawCoupon, \
     RawBondWithCoupons
@@ -24,15 +25,18 @@ class TinkoffApiClient:
         method: str,
         endpoint: str,
         json: dict | None = None,
-    ) -> dict:
-        response = await session.request(
+    ) -> dict[str, Any]:
+        async with session.request(
             method=method,
             url=self._base_url + endpoint,
             headers=self._headers(),
             ssl=False,
             json=json or {},
-        )
-        return await response.json()
+        ) as response:
+            if response.status != 200:
+                raise ApiClientRequestError(f"Code: {response.status}")
+
+            return await response.json()
 
     async def _get_account(self, session: ClientSession) -> RawAccount | None:
         data = await self._request(
@@ -44,7 +48,7 @@ class TinkoffApiClient:
 
         try:
             return RawAccount(id=data["accounts"][0]["id"])
-        except (KeyError, IndexError):
+        except IndexError:
             return None
 
     async def get_portfolio_raw(self, session: ClientSession) -> RawPortfolio | None:
@@ -69,7 +73,7 @@ class TinkoffApiClient:
                 daily_yield=position["dailyYield"],
                 current_nkd=position.get("currentNkd"),
             )
-            for position in data["positions"]
+            for position in data.get("positions", [])
         ]
 
         total_amounts_by_instrument = {
