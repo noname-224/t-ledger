@@ -1,8 +1,11 @@
+import asyncio
+
 from aiohttp import ClientSession
 
 from t_ledger.domain.models.core import Position
 from t_ledger.infra.api.enums import Endpoint, Method
-from t_ledger.infra.api.raw_models import RawAccount, RawPortfolio, RawPosition, RawBond, RawCoupon
+from t_ledger.infra.api.raw_models import RawAccount, RawPortfolio, RawPosition, RawBond, RawCoupon, \
+    RawBondWithCoupons
 from t_ledger.infra.api.consts import INSTRUMENT_TYPES, INSTRUMENT_ID_TYPE_UID, \
     COUPONS_BY_BONDS_END_DATE
 
@@ -87,48 +90,74 @@ class TinkoffApiClient:
         self,
         session: ClientSession,
         *,
-        bond_positions: list[Position]
+        bond_uids: list[str]
     ) -> list[RawBond]:
-        raw_bonds = []
-
-        for position in bond_positions:
-            data = (await self._request(
+        tasks = [
+            self._request(
                 session,
                 method=Method.POST,
                 endpoint=Endpoint.GET_BOND_BY,
-                json={"idType": INSTRUMENT_ID_TYPE_UID, "id": position.instrument_uid}
-            ))["instrument"]
-
-            raw_bonds.append(
-                RawBond(
-                    instrument_uid=data["uid"],
-                    currency=data["currency"],
-                    name=data["name"],
-                    risk_level=data["riskLevel"],
-                    country_of_risk=data["countryOfRisk"],
-                )
+                json={"idType": INSTRUMENT_ID_TYPE_UID, "id": uid}
             )
+            for uid in bond_uids
+        ]
 
-        return raw_bonds
+        responses = await asyncio.gather(*tasks, return_exceptions=True)
 
-    async def get_coupons_by_bond_raw(
+        result: list[RawBond] = []
+
+        for uid, response in zip(bond_uids, responses):
+            if isinstance(response, dict):
+                instrument = response["instrument"]
+
+                result.append(
+                    RawBond(
+                        instrument_uid=instrument["uid"],
+                        currency=instrument["currency"],
+                        name=instrument["name"],
+                        risk_level=instrument["riskLevel"],
+                        country_of_risk=instrument["countryOfRisk"],
+                    ),
+                )
+
+        return result
+
+    async def get_bonds_with_coupons_raw(
         self,
         session: ClientSession,
         *,
-        bond_uid: str
-    ) -> list[RawCoupon]:
-        data = (await self._request(
-            session,
-            method=Method.POST,
-            endpoint=Endpoint.GET_BOND_COUPONS,
-            json={"instrumentId": bond_uid, "to": COUPONS_BY_BONDS_END_DATE}
-        ))
-
-        return [
-            RawCoupon(
-                coupon_date=event["couponDate"],
-                coupon_type=event["couponType"],
-                amount_per_bond=event["payOneBond"],
+        bond_uids: list[str],
+    ) -> list[RawBondWithCoupons]:
+        tasks = [
+            self._request(
+                session,
+                method=Method.POST,
+                endpoint=Endpoint.GET_BOND_COUPONS,
+                json={"instrumentId": uid, "to": COUPONS_BY_BONDS_END_DATE}
             )
-            for event in data["events"]
+            for uid in bond_uids
         ]
+
+        responses = await asyncio.gather(*tasks, return_exceptions=True)
+
+        result: list[RawBondWithCoupons] = []
+
+        for bond_uid, response in zip(bond_uids, responses):
+            if isinstance(response, dict):
+                coupons = [
+                    RawCoupon(
+                        coupon_date=event["couponDate"],
+                        coupon_type=event["couponType"],
+                        amount_per_bond=event["payOneBond"],
+                    )
+                    for event in response["events"]
+                ]
+
+                result.append(
+                    RawBondWithCoupons(
+                        instrument_uid=bond_uid,
+                        coupons=coupons,
+                    )
+                )
+
+        return result

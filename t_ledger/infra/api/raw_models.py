@@ -41,3 +41,9 @@ class RawCoupon:
     coupon_date: str
     coupon_type: str
     amount_per_bond: dict[str, Any]
+
+
+@dataclass(slots=True)
+class RawBondWithCoupons:
+    instrument_uid: str
+    coupons: list[RawCoupon]

@@ -109,19 +109,27 @@ class PortfolioService:
         bond_positions = list(
             filter(lambda x: x.instrument_type == InstrumentType.BOND, portfolio.positions))
 
+        bond_uids = [bond_position.instrument_uid for bond_position in bond_positions]
+
         async with ClientSession() as session:
-            raw_bonds = await self._api_client.get_bonds_raw(session, bond_positions=bond_positions)
+            raw_bonds = await self._api_client.get_bonds_raw(session, bond_uids=bond_uids)
+
+        raw_bonds_by_uid = {
+            raw_bond.instrument_uid: raw_bond
+            for raw_bond in raw_bonds
+        }
 
         return [
             Bond(
-                instrument_uid=raw_bond.instrument_uid,
-                currency=Currency.from_api(raw_bond.currency),
-                name=raw_bond.name,
-                country_of_risk=raw_bond.country_of_risk,
-                risk_level=raw_bond.risk_level,
+                instrument_uid=raw_bonds_by_uid[position.instrument_uid].instrument_uid,
+                currency=Currency.from_api(raw_bonds_by_uid[position.instrument_uid].currency),
+                name=raw_bonds_by_uid[position.instrument_uid].name,
+                country_of_risk=raw_bonds_by_uid[position.instrument_uid].country_of_risk,
+                risk_level=raw_bonds_by_uid[position.instrument_uid].risk_level,
                 quantity=position.quantity,
             )
-            for raw_bond, position in zip(raw_bonds, bond_positions)
+            for position in bond_positions
+            if position.instrument_uid in raw_bonds_by_uid
         ]
 
     async def get_bonds_grouped_by_risk_level(self) -> list[BondsByRiskLevel] | None:
@@ -144,33 +152,37 @@ class PortfolioService:
         ]
 
     async def _get_coupons_by_bonds(self, bonds: list[Bond]) -> list[BondWithCouponSchedule]:
-        coupons_by_bonds = []
+        bond_uids = [bond.instrument_uid for bond in bonds]
 
         async with ClientSession() as session:
-            for bond in bonds:
-                raw_coupons = await self._api_client.get_coupons_by_bond_raw(
-                    session,
-                    bond_uid=bond.instrument_uid,
-                )
+            raw_bonds_with_coupons = await self._api_client.get_bonds_with_coupons_raw(
+                session,
+                bond_uids=bond_uids,
+            )
 
-                coupons_by_bonds.append(
-                    BondWithCouponSchedule(
-                        name=bond.name,
+        raw_bonds_with_coupons_by_uid = {
+            raw_bond_with_coupons.instrument_uid: raw_bond_with_coupons.coupons
+            for raw_bond_with_coupons in raw_bonds_with_coupons
+        }
+
+        return [
+            BondWithCouponSchedule(
+                name=bond.name,
+                quantity=bond.quantity,
+                coupons=[
+                    Coupon(
+                        bond_name=bond.name,
                         quantity=bond.quantity,
-                        coupons=[
-                            Coupon(
-                                bond_name=bond.name,
-                                quantity=bond.quantity,
-                                coupon_date=raw_coupon.coupon_date,
-                                coupon_type=raw_coupon.coupon_type,
-                                amount_per_bond=Money.from_api(raw_coupon.amount_per_bond),
-                            )
-                            for raw_coupon in raw_coupons
-                        ]
+                        coupon_date=raw_coupon.coupon_date,
+                        coupon_type=raw_coupon.coupon_type,
+                        amount_per_bond=Money.from_api(raw_coupon.amount_per_bond),
                     )
-                )
-
-        return coupons_by_bonds
+                    for raw_coupon in raw_bonds_with_coupons_by_uid[bond.instrument_uid]
+                ],
+            )
+            for bond in bonds
+            if bond.instrument_uid in raw_bonds_with_coupons_by_uid
+        ]
 
     @staticmethod
     def _get_coupons_from_prev_payment(coupons: list[Coupon]) -> list[Coupon]:
