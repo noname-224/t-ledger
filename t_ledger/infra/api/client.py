@@ -38,7 +38,7 @@ class TinkoffApiClient:
 
             return await response.json()
 
-    async def _get_account(self, session: ClientSession) -> RawAccount | None:
+    async def _get_account(self, session: ClientSession) -> RawAccount:
         data = await self._request(
             session,
             method=Method.POST,
@@ -48,10 +48,8 @@ class TinkoffApiClient:
 
         return parse_account(data)
 
-    async def get_portfolio_raw(self, session: ClientSession) -> RawPortfolio | None:
+    async def get_portfolio_raw(self, session: ClientSession) -> RawPortfolio:
         account = await self._get_account(session)
-        if account is None:
-            return None
 
         data = await self._request(
             session,
@@ -78,7 +76,10 @@ class TinkoffApiClient:
             for uid in bond_uids
         ]
 
-        responses = await asyncio.gather(*tasks, return_exceptions=True)
+        responses: list[dict[str, Any] | BaseException] = await asyncio.gather(
+            *tasks,
+            return_exceptions=True,
+        )
 
         return parse_bonds(responses, bond_uids)
 
@@ -98,6 +99,9 @@ class TinkoffApiClient:
             for uid in bond_uids
         ]
 
-        responses = await asyncio.gather(*tasks, return_exceptions=True)
+        responses: list[dict[str, Any] | BaseException] = await asyncio.gather(
+            *tasks,
+            return_exceptions=True,
+        )
 
         return parse_bonds_with_coupons(responses, bond_uids)
