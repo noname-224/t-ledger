@@ -46,10 +46,7 @@ class TinkoffApiClient:
             json={"status": "ACCOUNT_STATUS_ALL"}
         )
 
-        try:
-            return parse_account(data)
-        except IndexError:
-            return None
+        return parse_account(data)
 
     async def get_portfolio_raw(self, session: ClientSession) -> RawPortfolio | None:
         account = await self._get_account(session)
