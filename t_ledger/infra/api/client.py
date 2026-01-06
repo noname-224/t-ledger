@@ -5,10 +5,10 @@ from aiohttp import ClientSession
 
 from t_ledger.domain.exceptions import ApiClientRequestError
 from t_ledger.infra.api.enums import Endpoint, Method
-from t_ledger.infra.api.raw_models import RawAccount, RawPortfolio, RawPosition, RawBond, RawCoupon, \
-    RawBondWithCoupons
-from t_ledger.infra.api.consts import INSTRUMENT_TYPES, INSTRUMENT_ID_TYPE_UID, \
-    COUPONS_BY_BONDS_END_DATE
+from t_ledger.infra.api.mappers.core import parse_portfolio, parse_bonds, parse_bonds_with_coupons, \
+    parse_account
+from t_ledger.infra.api.raw_models import RawAccount, RawPortfolio, RawBond, RawBondWithCoupons
+from t_ledger.infra.api.consts import INSTRUMENT_ID_TYPE_UID, COUPONS_BY_BONDS_END_DATE
 
 
 class TinkoffApiClient:
@@ -47,7 +47,7 @@ class TinkoffApiClient:
         )
 
         try:
-            return RawAccount(id=data["accounts"][0]["id"])
+            return parse_account(data)
         except IndexError:
             return None
 
@@ -63,32 +63,7 @@ class TinkoffApiClient:
             json={"accountId": account.id, "currency": "RUB"}
         )
 
-        positions = [
-            RawPosition(
-                position_uid=position["positionUid"],
-                instrument_uid=position["instrumentUid"],
-                instrument_type=position["instrumentType"],
-                current_price=position["currentPrice"],
-                quantity=position["quantity"],
-                daily_yield=position["dailyYield"],
-                current_nkd=position.get("currentNkd"),
-            )
-            for position in data.get("positions", [])
-        ]
-
-        total_amounts_by_instrument = {
-            key: data[key]
-            for key in INSTRUMENT_TYPES
-            if key in data
-        }
-
-        return RawPortfolio(
-            account_id=data["accountId"],
-            positions=positions,
-            total_amount=data["totalAmountPortfolio"],
-            daily_yield=data["dailyYield"],
-            total_amounts_by_instrument=total_amounts_by_instrument,
-        )
+        return parse_portfolio(data)
 
     async def get_bonds_raw(
         self,
@@ -108,23 +83,7 @@ class TinkoffApiClient:
 
         responses = await asyncio.gather(*tasks, return_exceptions=True)
 
-        result: list[RawBond] = []
-
-        for uid, response in zip(bond_uids, responses):
-            if isinstance(response, dict):
-                instrument = response["instrument"]
-
-                result.append(
-                    RawBond(
-                        instrument_uid=instrument["uid"],
-                        currency=instrument["currency"],
-                        name=instrument["name"],
-                        risk_level=instrument["riskLevel"],
-                        country_of_risk=instrument["countryOfRisk"],
-                    ),
-                )
-
-        return result
+        return parse_bonds(responses, bond_uids)
 
     async def get_bonds_with_coupons_raw(
         self,
@@ -144,24 +103,4 @@ class TinkoffApiClient:
 
         responses = await asyncio.gather(*tasks, return_exceptions=True)
 
-        result: list[RawBondWithCoupons] = []
-
-        for bond_uid, response in zip(bond_uids, responses):
-            if isinstance(response, dict):
-                coupons = [
-                    RawCoupon(
-                        coupon_date=event["couponDate"],
-                        coupon_type=event["couponType"],
-                        amount_per_bond=event["payOneBond"],
-                    )
-                    for event in response["events"]
-                ]
-
-                result.append(
-                    RawBondWithCoupons(
-                        instrument_uid=bond_uid,
-                        coupons=coupons,
-                    )
-                )
-
-        return result
+        return parse_bonds_with_coupons(responses, bond_uids)
