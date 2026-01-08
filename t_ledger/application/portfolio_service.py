@@ -215,7 +215,7 @@ class PortfolioService:
 
         coupons_by_bonds = await self._get_coupons_by_bonds(bonds)
 
-        coupons_by_year_month: dict[str : dict[str : [Coupon]]] = {}
+        coupons_by_year_month: dict[str, dict[str, list[Coupon]]] = {}
 
         for coupons_by_bond in coupons_by_bonds:
             required_period_coupons = self._get_coupons_from_prev_payment(coupons_by_bond.coupons)
