@@ -6,7 +6,7 @@ from dependency_injector.wiring import inject, Provide
 from t_ledger.application.portfolio_service import PortfolioService
 from t_ledger.containers import Container
 from t_ledger.presentation.shared.models import YearMonth
-from t_ledger.presentation.telegram.contracts.callbacks import CouponPagination
+from t_ledger.presentation.telegram.contracts.callbacks import CouponMonthCallback
 from t_ledger.presentation.telegram.contracts.commands import BotCommandOption
 from t_ledger.presentation.telegram.contracts.messages import BotMessageOption
 from t_ledger.presentation.telegram.presenters.coupon_calendar import CouponCalendarPresenter
@@ -46,12 +46,12 @@ async def show_future_coupons(
     await coupon_repo.update_data(message.chat.id, active_msg_id=msg.message_id)
 
 
-@router.callback_query(CouponPagination.filter())
+@router.callback_query(CouponMonthCallback.filter())
 @inject
 async def paginate_coupons(
     callback: CallbackQuery,
-    callback_data: CouponPagination,
     coupon_repo: BaseCouponRepository = Provide[Container.coupon_repository],
+    callback_data: CouponMonthCallback,
 ) -> None:
     data = await coupon_repo.get_data(callback.message.chat.id)
 

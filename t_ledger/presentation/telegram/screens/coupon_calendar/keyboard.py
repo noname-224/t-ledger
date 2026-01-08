@@ -2,7 +2,7 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from t_ledger.presentation.shared.models import YearMonth
-from t_ledger.presentation.telegram.contracts.callbacks import CouponPagination
+from t_ledger.presentation.telegram.contracts.callbacks import CouponMonthCallback
 
 from .navigation import CouponCalendarTimeline
 
@@ -60,5 +60,5 @@ def _build_quick_jump_row(
 def _build_month_button(text: str, ym: YearMonth) -> InlineKeyboardButton:
     return InlineKeyboardButton(
         text=text,
-        callback_data=CouponPagination(year=ym.year, month=ym.month).pack(),
+        callback_data=CouponMonthCallback(year=ym.year, month=ym.month).pack(),
     )
