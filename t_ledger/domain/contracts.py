@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 
-class BaseCouponRepository(ABC):
+class CouponRepository(ABC):
 
     @abstractmethod
     async def update_data(self, chat_id: int, *, data: dict[str, Any] | None = None,

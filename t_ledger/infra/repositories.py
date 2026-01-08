@@ -1,9 +1,9 @@
 from typing import Any
 
-from t_ledger.domain.contracts import BaseCouponRepository
+from t_ledger.domain.contracts import CouponRepository
 
 
-class InMemoryCouponRepository(BaseCouponRepository):
+class InMemoryCouponRepository(CouponRepository):
     def __init__(self):
         self._data = {}
 

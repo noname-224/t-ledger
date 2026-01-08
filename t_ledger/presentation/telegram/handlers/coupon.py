@@ -14,7 +14,7 @@ from t_ledger.presentation.telegram.screens.coupon_calendar import CouponCalenda
     build_coupon_keyboard
 from t_ledger.presentation.telegram.texts.common import WINDOW_UNAVAILABLE, NO_COUPONS
 
-from t_ledger.domain.contracts import BaseCouponRepository
+from t_ledger.domain.contracts import CouponRepository
 
 
 router = Router()
@@ -26,7 +26,7 @@ router = Router()
 async def show_future_coupons(
     message: Message,
     portfolio_service: PortfolioService = Provide[Container.portfolio_service],
-    coupon_repo: BaseCouponRepository = Provide[Container.coupon_repository],
+    coupon_repo: CouponRepository = Provide[Container.coupon_repository],
 ) -> None:
     data = await portfolio_service.get_future_payments_by_bonds()
     if not data:
@@ -50,8 +50,8 @@ async def show_future_coupons(
 @inject
 async def paginate_coupons(
     callback: CallbackQuery,
-    coupon_repo: BaseCouponRepository = Provide[Container.coupon_repository],
     callback_data: CouponMonthCallback,
+    coupon_repo: CouponRepository = Provide[Container.coupon_repository],
 ) -> None:
     data = await coupon_repo.get_data(callback.message.chat.id)
 
