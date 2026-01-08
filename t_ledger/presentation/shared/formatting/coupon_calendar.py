@@ -1,8 +1,13 @@
 from decimal import Decimal
 
 from t_ledger.domain.enums.currency import Currency
-from t_ledger.presentation.shared.formatting.ui import bold, monospace, cut_line, currency_sign, \
-    underlined
+from t_ledger.presentation.shared.formatting.ui import (
+    bold,
+    monospace,
+    cut_line,
+    currency_sign,
+    underlined,
+)
 
 MONTH_NAMES = {
     1: "ЯНВАРЬ",
@@ -21,7 +26,7 @@ MONTH_NAMES = {
 
 
 def format_month_title(year: int, month: int) -> str:
-    return f"{bold(year)} {underlined(bold(MONTH_NAMES.get(month, "...")))}"
+    return f"{bold(year)} {underlined(bold(MONTH_NAMES.get(month, '...')))}"
 
 
 def format_coupon_line(

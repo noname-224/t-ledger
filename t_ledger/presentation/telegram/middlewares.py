@@ -5,7 +5,6 @@ from t_ledger.presentation.telegram.texts.common import ACCESS_DENIED
 
 
 class AccessMiddleware(BaseMiddleware):
-
     def __init__(self, allowed_user_ids: set[int]):
         self._allowed_user_ids = allowed_user_ids
 

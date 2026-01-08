@@ -22,7 +22,6 @@ class Money(BaseModelConfig):
     amount: Decimal
     currency: Currency
 
-
     @classmethod
     def from_api(cls, raw: dict) -> Money:
         return cls(

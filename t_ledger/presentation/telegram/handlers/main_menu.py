@@ -11,6 +11,7 @@ from t_ledger.presentation.telegram.presenters.portfolio import PortfolioPresent
 
 router = Router()
 
+
 @router.message(F.text == BotMessageOption.TOTAL_AMOUNT_PORTFOLIO)
 @router.message(Command(BotCommandOption.TOTAL_AMOUNT_PORTFOLIO))
 @inject

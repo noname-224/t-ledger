@@ -5,8 +5,12 @@ from aiohttp import ClientSession
 
 from t_ledger.domain.exceptions import ApiClientRequestError
 from t_ledger.infra.api.enums import Endpoint, Method
-from t_ledger.infra.api.mappers.core import parse_portfolio, parse_bonds, parse_bonds_with_coupons, \
-    parse_account
+from t_ledger.infra.api.mappers.core import (
+    parse_portfolio,
+    parse_bonds,
+    parse_bonds_with_coupons,
+    parse_account,
+)
 from t_ledger.infra.api.raw_models import RawAccount, RawPortfolio, RawBond, RawBondWithCoupons
 from t_ledger.infra.api.consts import INSTRUMENT_ID_TYPE_UID, COUPONS_BY_BONDS_END_DATE
 
@@ -43,7 +47,7 @@ class TinkoffApiClient:
             session,
             method=Method.POST,
             endpoint=Endpoint.GET_ACCOUNTS,
-            json={"status": "ACCOUNT_STATUS_ALL"}
+            json={"status": "ACCOUNT_STATUS_ALL"},
         )
 
         return parse_account(data)
@@ -55,23 +59,18 @@ class TinkoffApiClient:
             session,
             method=Method.POST,
             endpoint=Endpoint.GET_PORTFOLIO,
-            json={"accountId": account.id, "currency": "RUB"}
+            json={"accountId": account.id, "currency": "RUB"},
         )
 
         return parse_portfolio(data)
 
-    async def get_bonds_raw(
-        self,
-        session: ClientSession,
-        *,
-        bond_uids: list[str]
-    ) -> list[RawBond]:
+    async def get_bonds_raw(self, session: ClientSession, *, bond_uids: list[str]) -> list[RawBond]:
         tasks = [
             self._request(
                 session,
                 method=Method.POST,
                 endpoint=Endpoint.GET_BOND_BY,
-                json={"idType": INSTRUMENT_ID_TYPE_UID, "id": uid}
+                json={"idType": INSTRUMENT_ID_TYPE_UID, "id": uid},
             )
             for uid in bond_uids
         ]
@@ -94,7 +93,7 @@ class TinkoffApiClient:
                 session,
                 method=Method.POST,
                 endpoint=Endpoint.GET_BOND_COUPONS,
-                json={"instrumentId": uid, "to": COUPONS_BY_BONDS_END_DATE}
+                json={"instrumentId": uid, "to": COUPONS_BY_BONDS_END_DATE},
             )
             for uid in bond_uids
         ]

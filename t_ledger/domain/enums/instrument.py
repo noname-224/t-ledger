@@ -31,7 +31,6 @@ _INSTRUMENT_TYPE_MAP = {
     "totalAmountOptions": InstrumentType.OPTION,
     "totalAmountShares": InstrumentType.SHARE,
     "totalAmountSp": InstrumentType.SP,
-
     "bond": InstrumentType.BOND,
     "share": InstrumentType.SHARE,
     "currency": InstrumentType.CURRENCY,

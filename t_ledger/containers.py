@@ -8,7 +8,6 @@ from t_ledger.presentation.telegram.presenters.portfolio import PortfolioPresent
 
 
 class Container(containers.DeclarativeContainer):
-
     tinkoff_api_client = providers.Singleton(
         TinkoffApiClient,
         token=settings.tbank.token,

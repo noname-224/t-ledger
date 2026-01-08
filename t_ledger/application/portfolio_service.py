@@ -6,9 +6,19 @@ from t_ledger.application.utils import now
 from t_ledger.domain.enums.core import RiskLevel
 from t_ledger.domain.enums.currency import Currency
 from t_ledger.domain.enums.instrument import InstrumentType
-from t_ledger.domain.models.core import Portfolio, TotalAmountByInstrument, PortfolioAllocation, \
-    PortfolioInstrumentAllocation, Position, Bond, BondsByRiskLevel, AnnualCouponIncome, Coupon, \
-    BondWithCouponSchedule, MonthlyCouponIncome
+from t_ledger.domain.models.core import (
+    Portfolio,
+    TotalAmountByInstrument,
+    PortfolioAllocation,
+    PortfolioInstrumentAllocation,
+    Position,
+    Bond,
+    BondsByRiskLevel,
+    AnnualCouponIncome,
+    Coupon,
+    BondWithCouponSchedule,
+    MonthlyCouponIncome,
+)
 from t_ledger.domain.models.value_objects import Money, Quantity
 from t_ledger.infra.api.client import TinkoffApiClient
 
@@ -74,8 +84,10 @@ class PortfolioService:
         daily_yield_by_instrument: dict[InstrumentType, Decimal] = {}
 
         for position in portfolio.positions:
-            daily_yield_by_instrument[position.instrument_type] = daily_yield_by_instrument.get(
-                position.instrument_type, Decimal("0")) + position.daily_yield.amount
+            daily_yield_by_instrument[position.instrument_type] = (
+                daily_yield_by_instrument.get(position.instrument_type, Decimal("0"))
+                + position.daily_yield.amount
+            )
 
         instrument_allocations = sorted(
             (
@@ -93,7 +105,7 @@ class PortfolioService:
                 for instrument_amount in portfolio.total_amounts_by_active_instrument
             ),
             key=lambda x: x.total_amount.amount,
-            reverse=True
+            reverse=True,
         )
 
         return PortfolioAllocation(
@@ -107,17 +119,15 @@ class PortfolioService:
             return None
 
         bond_positions = list(
-            filter(lambda x: x.instrument_type == InstrumentType.BOND, portfolio.positions))
+            filter(lambda x: x.instrument_type == InstrumentType.BOND, portfolio.positions)
+        )
 
         bond_uids = [bond_position.instrument_uid for bond_position in bond_positions]
 
         async with ClientSession() as session:
             raw_bonds = await self._api_client.get_bonds_raw(session, bond_uids=bond_uids)
 
-        raw_bonds_by_uid = {
-            raw_bond.instrument_uid: raw_bond
-            for raw_bond in raw_bonds
-        }
+        raw_bonds_by_uid = {raw_bond.instrument_uid: raw_bond for raw_bond in raw_bonds}
 
         return [
             Bond(
@@ -196,7 +206,7 @@ class PortfolioService:
             else:
                 left = mid + 1
 
-        return coupons_in_asc_by_date[left - 1:]
+        return coupons_in_asc_by_date[left - 1 :]
 
     async def get_future_payments_by_bonds(self) -> list[AnnualCouponIncome]:
         bonds = await self._get_portfolio_bonds()
@@ -205,7 +215,7 @@ class PortfolioService:
 
         coupons_by_bonds = await self._get_coupons_by_bonds(bonds)
 
-        coupons_by_year_month: dict[str: dict[str: [Coupon]]] = {}
+        coupons_by_year_month: dict[str : dict[str : [Coupon]]] = {}
 
         for coupons_by_bond in coupons_by_bonds:
             required_period_coupons = self._get_coupons_from_prev_payment(coupons_by_bond.coupons)
@@ -216,9 +226,10 @@ class PortfolioService:
                     required_period_coupons[i].amount_per_bond = pay_one_bond
 
                 coupons_by_year_month.setdefault(
-                    required_period_coupons[i].coupon_date.year, {}).setdefault(
-                    required_period_coupons[i].coupon_date.month, []).append(
-                    required_period_coupons[i])
+                    required_period_coupons[i].coupon_date.year, {}
+                ).setdefault(required_period_coupons[i].coupon_date.month, []).append(
+                    required_period_coupons[i]
+                )
 
         annual_incomes = []
 
@@ -228,8 +239,7 @@ class PortfolioService:
 
             for month, coupons in months_data.items():
                 month_total = sum(
-                    coupon.amount_per_bond.amount * coupon.quantity.value
-                    for coupon in coupons
+                    coupon.amount_per_bond.amount * coupon.quantity.value for coupon in coupons
                 )
 
                 monthly_incomes.append(

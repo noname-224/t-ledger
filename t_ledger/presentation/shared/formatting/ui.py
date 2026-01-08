@@ -1,8 +1,7 @@
-
-
 # ─────────────────────────
 # Text formatting
 # ─────────────────────────
+
 
 def cut_line(line: str, max_len: int = 12, fill: str = "."):
     """
@@ -16,7 +15,7 @@ def cut_line(line: str, max_len: int = 12, fill: str = "."):
         if (space_idx := line.rfind(" ")) != -1:
             line = line[:space_idx]
         else:
-            return line[:max_len - 2] + fill * 2
+            return line[: max_len - 2] + fill * 2
     return line + fill * (max_len - len(line))
 
 
@@ -35,6 +34,7 @@ def monospace(text: str) -> str:
 # ─────────────────────────
 # Currency
 # ─────────────────────────
+
 
 def currency_sign(currency: str) -> str:
     return {

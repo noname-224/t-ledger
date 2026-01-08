@@ -2,8 +2,14 @@ from typing import Any
 
 from t_ledger.domain.exceptions import ApiClientError
 from t_ledger.infra.api.consts import INSTRUMENT_TYPES
-from t_ledger.infra.api.raw_models import RawPosition, RawPortfolio, RawBond, RawBondWithCoupons, \
-    RawCoupon, RawAccount
+from t_ledger.infra.api.raw_models import (
+    RawPosition,
+    RawPortfolio,
+    RawBond,
+    RawBondWithCoupons,
+    RawCoupon,
+    RawAccount,
+)
 
 
 def parse_account(data: dict[str, Any]) -> RawAccount:
@@ -28,11 +34,7 @@ def parse_portfolio(data: dict[str, Any]) -> RawPortfolio:
             for position in data.get("positions", [])
         ]
 
-        total_amounts_by_instrument = {
-            key: data[key]
-            for key in INSTRUMENT_TYPES
-            if key in data
-        }
+        total_amounts_by_instrument = {key: data[key] for key in INSTRUMENT_TYPES if key in data}
 
         return RawPortfolio(
             account_id=data["accountId"],

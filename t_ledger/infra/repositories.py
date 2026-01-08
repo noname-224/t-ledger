@@ -7,8 +7,9 @@ class InMemoryCouponRepository(CouponRepository):
     def __init__(self):
         self._data = {}
 
-    async def update_data(self, chat_id: int, *, data: dict[str, Any] | None = None,
-                          **kwargs) -> None:
+    async def update_data(
+        self, chat_id: int, *, data: dict[str, Any] | None = None, **kwargs
+    ) -> None:
         if data is not None:
             kwargs.update(data)
 

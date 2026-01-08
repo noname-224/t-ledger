@@ -10,8 +10,10 @@ from t_ledger.presentation.telegram.contracts.callbacks import CouponMonthCallba
 from t_ledger.presentation.telegram.contracts.commands import BotCommandOption
 from t_ledger.presentation.telegram.contracts.messages import BotMessageOption
 from t_ledger.presentation.telegram.presenters.coupon_calendar import CouponCalendarPresenter
-from t_ledger.presentation.telegram.screens.coupon_calendar import CouponCalendarTimeline, \
-    build_coupon_keyboard
+from t_ledger.presentation.telegram.screens.coupon_calendar import (
+    CouponCalendarTimeline,
+    build_coupon_keyboard,
+)
 from t_ledger.presentation.telegram.texts.common import WINDOW_UNAVAILABLE, NO_COUPONS
 
 from t_ledger.domain.contracts import CouponRepository

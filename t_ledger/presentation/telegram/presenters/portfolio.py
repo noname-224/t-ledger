@@ -1,6 +1,10 @@
 from t_ledger.application.portfolio_service import PortfolioService
-from t_ledger.presentation.shared.formatting.portfolio import format_alloc_block, \
-    format_risk_level_title, format_risk_level_block, format_total_amount_portfolio_text
+from t_ledger.presentation.shared.formatting.portfolio import (
+    format_alloc_block,
+    format_risk_level_title,
+    format_risk_level_block,
+    format_total_amount_portfolio_text,
+)
 
 
 class PortfolioPresenter:
