@@ -4,6 +4,11 @@ from aiogram.types import Message
 from dependency_injector.wiring import inject, Provide
 
 from t_ledger.containers import Container
+from t_ledger.domain.interfaces.services import (
+    PortfolioService,
+    PortfolioAllocationService,
+    BondRiskService,
+)
 from t_ledger.presentation.telegram.contracts.commands import BotCommandOption
 from t_ledger.presentation.telegram.contracts.messages import BotMessageOption
 from t_ledger.presentation.telegram.presenters.portfolio import PortfolioPresenter
@@ -17,9 +22,10 @@ router = Router()
 @inject
 async def handle_total_amount_portfolio(
     message: Message,
-    portfolio_presenter: PortfolioPresenter = Provide[Container.portfolio_presenter],
+    portfolio_service: PortfolioService = Provide[Container.portfolio_service],
 ) -> None:
-    text = await portfolio_presenter.render_total_amount_portfolio()
+    portfolio = await portfolio_service.get_portfolio()
+    text = await PortfolioPresenter.render_total_amount_portfolio(portfolio)
 
     await message.answer(text)
 
@@ -29,20 +35,24 @@ async def handle_total_amount_portfolio(
 @inject
 async def handle_portfolio_allocation(
     message: Message,
-    portfolio_presenter: PortfolioPresenter = Provide[Container.portfolio_presenter],
+    portfolio_allocation_service: PortfolioAllocationService = Provide[
+        Container.portfolio_allocation_service
+    ],
 ) -> None:
-    text = await portfolio_presenter.render_portfolio_allocation()
+    portfolio_allocation = await portfolio_allocation_service.get_portfolio_allocation()
+    text = await PortfolioPresenter.render_portfolio_allocation(portfolio_allocation)
 
     await message.answer(text)
 
 
-@router.message(F.text == BotMessageOption.BOND_RISK_LEVELS)
-@router.message(Command(BotCommandOption.BOND_RISK_LEVELS))
+@router.message(F.text == BotMessageOption.BONDS_BY_RISK)
+@router.message(Command(BotCommandOption.BONDS_BY_RISK))
 @inject
-async def handle_button(
+async def handle_bonds_by_risk(
     message: Message,
-    portfolio_presenter: PortfolioPresenter = Provide[Container.portfolio_presenter],
+    bond_risk_service: BondRiskService = Provide[Container.bond_risk_service],
 ) -> None:
-    text = await portfolio_presenter.render_bonds_grouped_by_risk_level()
+    bonds_by_risk = await bond_risk_service.get_bonds_by_risk()
+    text = await PortfolioPresenter.render_bonds_grouped_by_risk_level(bonds_by_risk)
 
     await message.answer(text)

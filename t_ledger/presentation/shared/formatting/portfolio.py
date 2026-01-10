@@ -1,8 +1,7 @@
 from decimal import Decimal
 
 from t_ledger.domain.enums.core import RiskLevel
-from t_ledger.domain.enums.currency import Currency
-from t_ledger.domain.enums.instrument import InstrumentType
+from t_ledger.domain.enums.core import Currency, InstrumentType
 from t_ledger.presentation.shared.formatting.ui import currency_sign, bold
 
 
@@ -61,11 +60,11 @@ def _risk_level_text(level: RiskLevel | str) -> str:
 
 def _instrument_name(instr_type: InstrumentType) -> str:
     return {
-        "BOND": "ОБЛИГАЦИИ",
-        "CURRENCY": "ВАЛЮТЫ",
-        "ETF": "БИРЖЕВЫЕ ФОНДЫ",
-        "FUTURES": "ФЬЮЧЕРСЫ",
-        "OPTION": "ОПЦИОНЫ",
-        "SHARE": "АКЦИИ",
-        "SP": "СТРУКТУРНЫЕ ПРОДУКТЫ",
+        InstrumentType.BOND: "ОБЛИГАЦИИ",
+        InstrumentType.CURRENCY: "ВАЛЮТЫ",
+        InstrumentType.ETF: "БИРЖЕВЫЕ ФОНДЫ",
+        InstrumentType.FUTURES: "ФЬЮЧЕРСЫ",
+        InstrumentType.OPTION: "ОПЦИОНЫ",
+        InstrumentType.SHARE: "АКЦИИ",
+        InstrumentType.SP: "СТРУКТУРНЫЕ ПРОДУКТЫ",
     }.get(instr_type, "...")

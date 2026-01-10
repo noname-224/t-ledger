@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from t_ledger.domain.enums.currency import Currency
+from t_ledger.domain.enums.core import Currency
 from t_ledger.presentation.shared.formatting.ui import (
     bold,
     monospace,

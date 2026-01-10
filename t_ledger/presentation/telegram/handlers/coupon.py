@@ -3,8 +3,9 @@ from aiogram.filters import Command
 from aiogram.types import Message, CallbackQuery
 from dependency_injector.wiring import inject, Provide
 
-from t_ledger.application.portfolio_service import PortfolioService
 from t_ledger.containers import Container
+from t_ledger.domain.enums.core import MessageType
+from t_ledger.domain.interfaces.services import BondCouponServise, ActiveMessageService
 from t_ledger.presentation.shared.models import YearMonth
 from t_ledger.presentation.telegram.contracts.callbacks import CouponMonthCallback
 from t_ledger.presentation.telegram.contracts.commands import BotCommandOption
@@ -14,9 +15,7 @@ from t_ledger.presentation.telegram.screens.coupon_calendar import (
     CouponCalendarTimeline,
     build_coupon_keyboard,
 )
-from t_ledger.presentation.telegram.texts.common import WINDOW_UNAVAILABLE, NO_COUPONS
-
-from t_ledger.domain.contracts import CouponRepository
+from t_ledger.presentation.telegram.texts.common import WINDOW_UNAVAILABLE
 
 
 router = Router()
@@ -25,43 +24,48 @@ router = Router()
 @router.message(F.text == BotMessageOption.FUTURE_BOND_PAYMENTS)
 @router.message(Command(BotCommandOption.FUTURE_BOND_PAYMENTS))
 @inject
-async def show_future_coupons(
+async def show_coupon_calendar(
     message: Message,
-    portfolio_service: PortfolioService = Provide[Container.portfolio_service],
-    coupon_repo: CouponRepository = Provide[Container.coupon_repository],
+    bond_coupon_service: BondCouponServise = Provide[Container.bond_coupon_service],
+    active_message_service: ActiveMessageService = Provide[Container.active_message_service],
 ) -> None:
-    data = await portfolio_service.get_future_payments_by_bonds()
-    if not data:
-        await message.answer(NO_COUPONS)
-        return
+    future_bond_payments = await bond_coupon_service.get_future_bond_payments()
 
-    navigation = CouponCalendarTimeline(data)
+    navigation = CouponCalendarTimeline(future_bond_payments)
     ym = navigation.first()
-
-    await coupon_repo.update_data(message.chat.id, coupons=data)
 
     text = CouponCalendarPresenter().render_month(ym, navigation.get(ym))
     keyboard = build_coupon_keyboard(ym, navigation)
 
     msg = await message.answer(text, reply_markup=keyboard)
 
-    await coupon_repo.update_data(message.chat.id, active_msg_id=msg.message_id)
+    await active_message_service.set_active_message(
+        message_type=MessageType.FUTURE_BOND_PAYMENTS,
+        message_id=msg.message_id,
+        message_data=future_bond_payments,
+    )
 
 
 @router.callback_query(CouponMonthCallback.filter())
 @inject
-async def paginate_coupons(
+async def paginate_coupon_calendar(
     callback: CallbackQuery,
     callback_data: CouponMonthCallback,
-    coupon_repo: CouponRepository = Provide[Container.coupon_repository],
+    active_message_service: ActiveMessageService = Provide[Container.active_message_service],
 ) -> None:
-    data = await coupon_repo.get_data(callback.message.chat.id)
+    active_msg_data = await active_message_service.get_active_message(
+        message_type=MessageType.FUTURE_BOND_PAYMENTS
+    )
 
-    if not data or callback.message.message_id != data["active_msg_id"]:
+    active_msg_id, future_bond_payments = (
+        active_msg_data if active_msg_data is not None else (None, None)
+    )
+
+    if active_msg_id is None or callback.message.message_id != active_msg_id:
         await callback.answer(WINDOW_UNAVAILABLE, show_alert=True)
         return
 
-    navigation = CouponCalendarTimeline(data["coupons"])
+    navigation = CouponCalendarTimeline(future_bond_payments)
     ym = YearMonth(callback_data.year, callback_data.month)
 
     if not navigation.exists(ym):
