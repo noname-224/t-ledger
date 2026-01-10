@@ -1,6 +1,6 @@
 from dependency_injector import containers, providers
 
-from t_ledger.application.services.active_screen import ActiveMessageServiceImpl
+from t_ledger.application.services.active_message import ActiveMessageServiceImpl
 from t_ledger.application.services.bond.coupon import BondCouponServiseImp
 from t_ledger.application.services.bond.risk import BondRiskServiceImpl
 from t_ledger.application.services.portfolio import PortfolioServiceImpl
