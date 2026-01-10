@@ -1,4 +1,4 @@
-from t_ledger.application.portfolio_service import PortfolioService
+from t_ledger.domain.models.core import Portfolio, PortfolioAllocation, BondsByRiskLevel
 from t_ledger.presentation.shared.formatting.portfolio import (
     format_alloc_block,
     format_risk_level_title,
@@ -8,20 +8,16 @@ from t_ledger.presentation.shared.formatting.portfolio import (
 
 
 class PortfolioPresenter:
-    def __init__(self, portfolio_service: PortfolioService):
-        self._portfolio_service = portfolio_service
-
-    async def render_total_amount_portfolio(self) -> str:
-        data = await self._portfolio_service.get_portfolio()
-
+    @staticmethod
+    async def render_total_amount_portfolio(data: Portfolio) -> str:
         return format_total_amount_portfolio_text(
             currency=data.total_amount.currency,
             total_amount=data.total_amount.amount,
             daily_yield=data.daily_yield.amount,
         )
 
-    async def render_portfolio_allocation(self) -> str:
-        data = await self._portfolio_service.get_portfolio_allocation()
+    @staticmethod
+    async def render_portfolio_allocation(data: PortfolioAllocation) -> str:
         lines = []
 
         for instrument in data.instrument_allocations:
@@ -37,8 +33,8 @@ class PortfolioPresenter:
 
         return "\n\n".join(lines)
 
-    async def render_bonds_grouped_by_risk_level(self) -> str:
-        data = await self._portfolio_service.get_bonds_grouped_by_risk_level()
+    @staticmethod
+    async def render_bonds_grouped_by_risk_level(data: list[BondsByRiskLevel]) -> str:
         lines = []
 
         for bond_group in data:

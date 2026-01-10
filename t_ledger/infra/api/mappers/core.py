@@ -1,64 +1,75 @@
 from typing import Any
 
 from t_ledger.domain.exceptions import ApiClientError
-from t_ledger.infra.api.consts import INSTRUMENT_TYPES
-from t_ledger.infra.api.raw_models import (
-    RawPosition,
-    RawPortfolio,
-    RawBond,
-    RawBondWithCoupons,
-    RawCoupon,
-    RawAccount,
+from t_ledger.domain.models.core import (
+    Account,
+    Position,
+    Portfolio,
+    TotalAmountByInstrument,
+    Bond,
+    BondWithCouponSchedule,
+    Coupon,
 )
+from t_ledger.domain.models.value_objects import Money, Quantity
+from t_ledger.infra.api.consts import INSTRUMENT_TYPES
 
 
-def parse_account(data: dict[str, Any]) -> RawAccount:
+def account_from_api(response: dict[str, Any]) -> Account:
     try:
-        return RawAccount(id=data["accounts"][0]["id"])
+        return Account(id=response["accounts"][0]["id"])
     except (IndexError, KeyError, TypeError):
         raise ApiClientError("Error while parsing account")
 
 
-def parse_portfolio(data: dict[str, Any]) -> RawPortfolio:
+def portfolio_from_api(response: dict[str, Any]) -> Portfolio:
     try:
         positions = [
-            RawPosition(
+            Position(
                 position_uid=position["positionUid"],
                 instrument_uid=position["instrumentUid"],
                 instrument_type=position["instrumentType"],
-                current_price=position["currentPrice"],
-                quantity=position["quantity"],
-                daily_yield=position["dailyYield"],
-                current_nkd=position.get("currentNkd"),
+                current_price=Money.from_api(position["currentPrice"]),
+                quantity=Quantity.from_api(position["quantity"]),
+                daily_yield=Money.from_api(position["dailyYield"]),
+                current_nkd=Money.from_api(position.get("currentNkd")),
             )
-            for position in data.get("positions", [])
+            for position in response.get("positions", [])
         ]
 
-        total_amounts_by_instrument = {key: data[key] for key in INSTRUMENT_TYPES if key in data}
+        total_amounts_by_instrument = [
+            TotalAmountByInstrument(
+                instrument_type=enum_type,
+                total_amount=Money.from_api(response[json_field]),
+            )
+            for json_field, enum_type in INSTRUMENT_TYPES.items()
+            if json_field in response
+        ]
 
-        return RawPortfolio(
-            account_id=data["accountId"],
+        return Portfolio(
+            account_id=response["accountId"],
             positions=positions,
-            total_amount=data["totalAmountPortfolio"],
-            daily_yield=data["dailyYield"],
+            total_amount=Money.from_api(response["totalAmountPortfolio"]),
+            daily_yield=Money.from_api(response["dailyYield"]),
             total_amounts_by_instrument=total_amounts_by_instrument,
         )
-    except (AttributeError, KeyError, TypeError):
-        raise ApiClientError("Error while parsing portfolio")
+    except (AttributeError, KeyError, TypeError) as e:
+        raise ApiClientError(f"Error while parsing portfolio {e}")
 
 
-def parse_bonds(data: list[dict[str, Any] | BaseException], bond_uids: list[str]) -> list[RawBond]:
+def bonds_from_api(
+    responses: list[dict[str, Any] | BaseException], instrument_uids: list[str]
+) -> list[Bond]:
     try:
-        result: list[RawBond] = []
+        result: list[Bond] = []
 
-        for uid, response in zip(bond_uids, data):
+        for uid, response in zip(instrument_uids, responses):
             if isinstance(response, BaseException):
                 continue
 
             instrument = response["instrument"]
 
             result.append(
-                RawBond(
+                Bond(
                     instrument_uid=instrument["uid"],
                     currency=instrument["currency"],
                     name=instrument["name"],
@@ -72,32 +83,27 @@ def parse_bonds(data: list[dict[str, Any] | BaseException], bond_uids: list[str]
         raise ApiClientError("Error while parsing bonds")
 
 
-def parse_bonds_with_coupons(
-    data: list[dict[str, Any] | BaseException],
-    bond_uids: list[str],
-) -> list[RawBondWithCoupons]:
+def bonds_with_coupons_from_api(
+    responses: list[dict[str, Any] | BaseException],
+    instrument_uids: list[str],
+) -> list[BondWithCouponSchedule]:
     try:
-        result: list[RawBondWithCoupons] = []
+        result: list[BondWithCouponSchedule] = []
 
-        for bond_uid, response in zip(bond_uids, data):
+        for uid, response in zip(instrument_uids, responses):
             if isinstance(response, BaseException):
                 continue
 
             coupons = [
-                RawCoupon(
+                Coupon(
                     coupon_date=event["couponDate"],
                     coupon_type=event["couponType"],
-                    amount_per_bond=event["payOneBond"],
+                    amount_per_bond=Money.from_api(event["payOneBond"]),
                 )
                 for event in response["events"]
             ]
 
-            result.append(
-                RawBondWithCoupons(
-                    instrument_uid=bond_uid,
-                    coupons=coupons,
-                )
-            )
+            result.append(BondWithCouponSchedule(instrument_uid=uid, coupons=coupons))
 
         return result
     except (KeyError, TypeError):

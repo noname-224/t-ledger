@@ -29,7 +29,7 @@ class CouponCalendarPresenter:
         lines = []
 
         for coupon in month_data.coupons:
-            amount = coupon.amount_per_bond.amount * coupon.quantity.value
+            amount = coupon.amount_per_bond.amount * coupon.bond_quantity.value
             lines.append(
                 format_coupon_line(
                     day=coupon.coupon_date.day,

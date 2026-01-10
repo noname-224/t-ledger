@@ -1,6 +1,26 @@
 from enum import StrEnum
 
 
+class InstrumentType(StrEnum):
+    BOND = "bond"
+    CURRENCY = "currency"
+    ETF = "etf"
+    FUTURES = "futures"
+    OPTION = "option"
+    SHARE = "share"
+    SP = "sp"
+    CLEARING_CERTIFICATE = "clearing_certificate"
+    INDEX = "index"
+    COMMODITY = "commodity"
+
+
+class Currency(StrEnum):
+    EUR = "eur"
+    RUB = "rub"
+    USD = "usd"
+    NONE = ""
+
+
 class RiskLevel(StrEnum):
     LOW = "RISK_LEVEL_LOW"
     MODERATE = "RISK_LEVEL_MODERATE"
@@ -17,3 +37,7 @@ class CouponType(StrEnum):
     FIX = "COUPON_TYPE_FIX"
     VARIABLE = "COUPON_TYPE_VARIABLE"
     OTHER = "COUPON_TYPE_OTHER"
+
+
+class MessageType(StrEnum):
+    FUTURE_BOND_PAYMENTS = "FUTURE_BOND_PAYMENTS"
