@@ -33,12 +33,9 @@ def position_uids_with_types() -> list[tuple[str, str]]:
 def portfolio_instruments() -> set[str]:
     return {
         "totalAmountBonds",
-        "totalAmountCurrencies",
-        "totalAmountEtf",
         "totalAmountFutures",
         "totalAmountOptions",
         "totalAmountShares",
-        "totalAmountSp",
     }
 
 
