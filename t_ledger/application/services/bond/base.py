@@ -19,7 +19,6 @@ class BondServiceMixin:
         bonds = await self._api_client.fetch_bonds(instrument_uids=list(bond_quantities))
 
         for bond in bonds:
-            if bond.instrument_uid in bond_quantities:
-                bond.quantity = bond_quantities[bond.instrument_uid]
+            bond.quantity = bond_quantities.get(bond.instrument_uid)
 
         return bonds
