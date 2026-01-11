@@ -5,10 +5,10 @@ from t_ledger.domain.models.core import BondsByRiskLevel
 
 
 class BondRiskServiceImpl(BondServiceMixin, BondRiskService):
-    async def get_bonds_by_risk(self) -> list[BondsByRiskLevel]:
-        return await self._build_bonds_by_risk()
+    async def get_bonds_by_risks(self) -> list[BondsByRiskLevel]:
+        return await self._build_bonds_by_risks()
 
-    async def _build_bonds_by_risk(self) -> list[BondsByRiskLevel]:
+    async def _build_bonds_by_risks(self) -> list[BondsByRiskLevel]:
         bonds = await self._build_bonds()
 
         bonds_by_risk_levels = {risk_level: [] for risk_level in RiskLevel}

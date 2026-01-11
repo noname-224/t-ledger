@@ -52,7 +52,7 @@ async def handle_bonds_by_risk(
     message: Message,
     bond_risk_service: BondRiskService = Provide[Container.bond_risk_service],
 ) -> None:
-    bonds_by_risk = await bond_risk_service.get_bonds_by_risk()
-    text = await PortfolioPresenter.render_bonds_grouped_by_risk_level(bonds_by_risk)
+    bonds_by_risks = await bond_risk_service.get_bonds_by_risks()
+    text = await PortfolioPresenter.render_bonds_grouped_by_risk_level(bonds_by_risks)
 
     await message.answer(text)

@@ -22,7 +22,7 @@ class PortfolioAllocationService(ABC):
 
 class BondRiskService(ABC):
     @abstractmethod
-    async def get_bonds_by_risk(self) -> list[BondsByRiskLevel]: ...
+    async def get_bonds_by_risks(self) -> list[BondsByRiskLevel]: ...
 
 
 class BondCouponServise(ABC):
