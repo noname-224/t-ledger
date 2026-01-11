@@ -12,7 +12,7 @@ from t_ledger.domain.models.core import (
 )
 
 
-class BondCouponServiseImp(BondServiceMixin, BondCouponServise):
+class BondCouponServiseImpl(BondServiceMixin, BondCouponServise):
     async def get_future_bond_payments(self) -> list[AnnualCouponIncome]:
         return await self._build_future_bond_payment()
 

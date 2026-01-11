@@ -1,7 +1,7 @@
 from dependency_injector import containers, providers
 
 from t_ledger.application.services.active_message import ActiveMessageServiceImpl
-from t_ledger.application.services.bond.coupon import BondCouponServiseImp
+from t_ledger.application.services.bond.coupon import BondCouponServiseImpl
 from t_ledger.application.services.bond.risk import BondRiskServiceImpl
 from t_ledger.application.services.portfolio import PortfolioServiceImpl
 from t_ledger.application.services.portfolio_allocation import PortfolioAllocationServiceImpl
@@ -37,7 +37,7 @@ class Container(containers.DeclarativeContainer):
     )
 
     bond_coupon_service = providers.Factory(
-        BondCouponServiseImp,
+        BondCouponServiseImpl,
         api_client=tinkoff_api_client,
     )
 
