@@ -28,18 +28,16 @@ class Container(containers.DeclarativeContainer):
 
     portfolio_allocation_service = providers.Factory(
         PortfolioAllocationServiceImpl,
-        portfolio_service=portfolio_service,
+        api_client=tinkoff_api_client,
     )
 
     bond_risk_service = providers.Factory(
         BondRiskServiceImpl,
-        portfolio_service=portfolio_service,
         api_client=tinkoff_api_client,
     )
 
     bond_coupon_service = providers.Factory(
         BondCouponServiseImp,
-        portfolio_service=portfolio_service,
         api_client=tinkoff_api_client,
     )
 

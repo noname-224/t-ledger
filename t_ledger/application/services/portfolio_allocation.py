@@ -1,20 +1,21 @@
 from decimal import Decimal
 
 from t_ledger.domain.enums.core import InstrumentType
-from t_ledger.domain.interfaces.services import PortfolioAllocationService, PortfolioService
+from t_ledger.domain.interfaces.clients import TinkoffApiClient
+from t_ledger.domain.interfaces.services import PortfolioAllocationService
 from t_ledger.domain.models.core import PortfolioAllocation, PortfolioInstrumentAllocation
 from t_ledger.domain.models.value_objects import Money
 
 
 class PortfolioAllocationServiceImpl(PortfolioAllocationService):
-    def __init__(self, portfolio_service: PortfolioService):
-        self._portfolio_service = portfolio_service
+    def __init__(self, api_client: TinkoffApiClient):
+        self._api_client = api_client
 
     async def get_portfolio_allocation(self) -> PortfolioAllocation:
         return await self._build_portfolio_allocation()
 
     async def _build_portfolio_allocation(self) -> PortfolioAllocation:
-        portfolio = await self._portfolio_service.get_portfolio()
+        portfolio = await self._api_client.fetch_portfolio()
 
         daily_yield_by_instrument: dict[InstrumentType, Money] = {}
 

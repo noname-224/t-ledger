@@ -1,16 +1,14 @@
-from t_ledger.application.services.portfolio import PortfolioService
 from t_ledger.domain.enums.core import InstrumentType
 from t_ledger.domain.interfaces.clients import TinkoffApiClient
 from t_ledger.domain.models.core import Bond
 
 
 class BondServiceMixin:
-    def __init__(self, portfolio_service: PortfolioService, api_client: TinkoffApiClient):
-        self._portfolio_service = portfolio_service
+    def __init__(self, api_client: TinkoffApiClient):
         self._api_client = api_client
 
     async def _build_bonds(self) -> list[Bond]:
-        portfolio = await self._portfolio_service.get_portfolio()
+        portfolio = await self._api_client.fetch_portfolio()
 
         bond_quantities = {
             position.instrument_uid: position.quantity
