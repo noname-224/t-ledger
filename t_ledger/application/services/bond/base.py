@@ -8,7 +8,7 @@ class BondServiceMixin:
         self._api_client = api_client
 
     async def _build_bonds(self) -> list[Bond]:
-        portfolio = await self._api_client.fetch_portfolio()
+        portfolio = await self._api_client.get_portfolio()
 
         bond_quantities = {
             position.instrument_uid: position.quantity
@@ -16,7 +16,7 @@ class BondServiceMixin:
             if position.instrument_type == InstrumentType.BOND
         }
 
-        bonds = await self._api_client.fetch_bonds(instrument_uids=list(bond_quantities))
+        bonds = await self._api_client.get_bonds(instrument_uids=list(bond_quantities))
 
         for bond in bonds:
             bond.quantity = bond_quantities.get(bond.instrument_uid)

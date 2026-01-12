@@ -74,7 +74,7 @@ class BondCouponServiseImpl(BondServiceMixin, BondCouponServise):
             for bond in bonds
         }
 
-        bonds_with_coupons = await self._api_client.fetch_bonds_with_coupons(list(bond_data))
+        bonds_with_coupons = await self._api_client.get_bonds_with_coupons(list(bond_data))
 
         for bond in bonds_with_coupons:
             if bond.instrument_uid not in bond_data:

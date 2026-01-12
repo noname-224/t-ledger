@@ -22,7 +22,7 @@ class TinkoffApiClientImpl(TinkoffApiClient):
         self._base_url = base_url
         self.__session: ClientSession | None = None
 
-    async def fetch_portfolio(self) -> Portfolio:
+    async def get_portfolio(self) -> Portfolio:
         account = await self._fetch_account()
 
         response = await self._request(
@@ -33,7 +33,7 @@ class TinkoffApiClientImpl(TinkoffApiClient):
 
         return portfolio_from_api(response)
 
-    async def fetch_bonds(self, instrument_uids: list[str]) -> list[Bond]:
+    async def get_bonds(self, instrument_uids: list[str]) -> list[Bond]:
         tasks = [
             self._request(
                 method=Method.POST,
@@ -50,7 +50,7 @@ class TinkoffApiClientImpl(TinkoffApiClient):
 
         return bonds_from_api(responses, instrument_uids)
 
-    async def fetch_bonds_with_coupons(
+    async def get_bonds_with_coupons(
         self, instrument_uids: list[str]
     ) -> list[BondWithCouponSchedule]:
         tasks = [
