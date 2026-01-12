@@ -52,16 +52,16 @@ class TinkoffApiClientImpl(TinkoffApiClient):
 
         return bonds_from_api(responses, bond_positions)
 
-    async def get_bonds_with_coupons(
-        self, instrument_uids: list[str]
-    ) -> list[BondWithCouponSchedule]:
+    async def get_bonds_with_coupons(self) -> list[BondWithCouponSchedule]:
+        bonds = await self.get_bonds()
+
         tasks = [
             self._request(
                 method=Method.POST,
                 endpoint=Endpoint.GET_BOND_COUPONS,
-                json={"instrumentId": uid, "to": COUPONS_BY_BONDS_END_DATE},
+                json={"instrumentId": bond.instrument_uid, "to": COUPONS_BY_BONDS_END_DATE},
             )
-            for uid in instrument_uids
+            for bond in bonds
         ]
 
         responses: list[dict[str, Any] | BaseException] = await asyncio.gather(
@@ -69,7 +69,7 @@ class TinkoffApiClientImpl(TinkoffApiClient):
             return_exceptions=True,
         )
 
-        return bonds_with_coupons_from_api(responses, instrument_uids)
+        return bonds_with_coupons_from_api(responses, bonds)
 
     def _headers(self) -> dict[str, str]:
         return {"Authorization": f"Bearer {self._token}"}

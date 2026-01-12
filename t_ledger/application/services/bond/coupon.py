@@ -6,8 +6,6 @@ from t_ledger.domain.interfaces.services import BondCouponServise
 from t_ledger.domain.models.core import (
     AnnualCouponIncome,
     Coupon,
-    Bond,
-    BondWithCouponSchedule,
     MonthlyCouponIncome,
 )
 
@@ -17,9 +15,7 @@ class BondCouponServiseImpl(BondServiceMixin, BondCouponServise):
         return await self._build_future_bond_payment()
 
     async def _build_future_bond_payment(self) -> list[AnnualCouponIncome]:
-        bonds = await self._build_bonds()
-
-        coupons_by_bonds = await self._get_bonds_with_coupons(bonds)
+        coupons_by_bonds = await self._api_client.get_bonds_with_coupons()
 
         coupons_by_year_month: dict[str, dict[str, list[Coupon]]] = {}
 
@@ -64,30 +60,6 @@ class BondCouponServiseImpl(BondServiceMixin, BondCouponServise):
             )
 
         return annual_incomes
-
-    async def _get_bonds_with_coupons(self, bonds: list[Bond]) -> list[BondWithCouponSchedule]:
-        bond_data = {
-            bond.instrument_uid: {
-                "name": bond.name,
-                "quantity": bond.quantity,
-            }
-            for bond in bonds
-        }
-
-        bonds_with_coupons = await self._api_client.get_bonds_with_coupons(list(bond_data))
-
-        for bond in bonds_with_coupons:
-            if bond.instrument_uid not in bond_data:
-                continue
-
-            bond.name = bond_data[bond.instrument_uid]["name"]
-            bond.quantity = bond_data[bond.instrument_uid]["quantity"]
-
-            for coupon in bond.coupons:
-                coupon.bond_name = bond.name
-                coupon.bond_quantity = bond.quantity
-
-        return bonds_with_coupons
 
     def _get_coupons_from_prev_payment(self, coupons: list[Coupon]) -> list[Coupon]:
         """

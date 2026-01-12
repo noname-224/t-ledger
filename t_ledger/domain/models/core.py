@@ -64,16 +64,16 @@ class Coupon(BaseModelConfig):
     coupon_type: CouponType
     amount_per_bond: Money
 
-    bond_name: str | None = None
-    bond_quantity: Quantity | None = None
+    bond_name: str
+    bond_quantity: Quantity
 
 
 class BondWithCouponSchedule(BaseModelConfig):
     instrument_uid: str
     coupons: list[Coupon]
 
-    name: str | None = None
-    quantity: Quantity | None = None
+    name: str
+    quantity: Quantity
 
 
 class MonthlyCouponIncome(BaseModelConfig):

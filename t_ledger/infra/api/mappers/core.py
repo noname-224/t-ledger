@@ -81,12 +81,12 @@ def bonds_from_api(
 
 def bonds_with_coupons_from_api(
     responses: list[dict[str, Any] | BaseException],
-    instrument_uids: list[str],
+    bonds: list[Bond],
 ) -> list[BondWithCouponSchedule]:
     try:
         result: list[BondWithCouponSchedule] = []
 
-        for uid, response in zip(instrument_uids, responses):
+        for bond, response in zip(bonds, responses):
             if isinstance(response, BaseException):
                 continue
 
@@ -95,11 +95,20 @@ def bonds_with_coupons_from_api(
                     coupon_date=event["couponDate"],
                     coupon_type=event["couponType"],
                     amount_per_bond=Money.from_api(event["payOneBond"]),
+                    bond_name=bond.name,
+                    bond_quantity=bond.quantity,
                 )
                 for event in response["events"]
             ]
 
-            result.append(BondWithCouponSchedule(instrument_uid=uid, coupons=coupons))
+            result.append(
+                BondWithCouponSchedule(
+                    instrument_uid=bond.instrument_uid,
+                    coupons=coupons,
+                    name=bond.name,
+                    quantity=bond.quantity,
+                )
+            )
 
         return result
     except (KeyError, TypeError):
