@@ -18,7 +18,6 @@ class Position(BaseModelConfig):
     current_price: Money
     quantity: Quantity
     daily_yield: Money
-    current_nkd: Money | None = None
 
 
 class PositionBond(BaseModelConfig):
@@ -52,7 +51,7 @@ class Bond(BaseModelConfig):
     name: str
     country_of_risk: str
     risk_level: RiskLevel
-    quantity: Quantity | None = None
+    quantity: Quantity
 
 
 class PortfolioAllocation(BaseModelConfig):

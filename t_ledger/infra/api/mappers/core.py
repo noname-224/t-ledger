@@ -16,13 +16,6 @@ from t_ledger.domain.models.value_objects import Money, Quantity
 from t_ledger.infra.api.consts import INSTRUMENT_TYPES
 
 
-def account_from_api(response: dict[str, Any]) -> Account:
-    try:
-        return Account(id=response["accounts"][0]["id"])
-    except (IndexError, KeyError, TypeError):
-        raise ApiClientError("Error while parsing account")
-
-
 def portfolio_from_api(response: dict[str, Any]) -> Portfolio:
     try:
         positions = [
@@ -33,7 +26,6 @@ def portfolio_from_api(response: dict[str, Any]) -> Portfolio:
                 current_price=Money.from_api(position["currentPrice"]),
                 quantity=Quantity.from_api(position["quantity"]),
                 daily_yield=Money.from_api(position["dailyYield"]),
-                current_nkd=Money.from_api(position.get("currentNkd")),
             )
             for position in response.get("positions", [])
         ]
@@ -123,3 +115,10 @@ def bond_positions_from_api(response: dict[str, Any]) -> list[PositionBond]:
         for position in response.get("positions", [])
         if position["instrumentType"] == InstrumentType.BOND
     ]
+
+
+def account_from_api(response: dict[str, Any]) -> Account:
+    try:
+        return Account(id=response["accounts"][0]["id"])
+    except (IndexError, KeyError, TypeError):
+        raise ApiClientError("Error while parsing account")
