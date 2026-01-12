@@ -1,8 +1,8 @@
-from t_ledger.domain.models.core import Portfolio, PortfolioAllocation, BondsByRiskLevel
+from t_ledger.domain.models.core import BondsByRiskLevel, Portfolio, PortfolioAllocation
 from t_ledger.presentation.shared.formatting.portfolio import (
     format_alloc_block,
-    format_risk_level_title,
     format_risk_level_block,
+    format_risk_level_title,
     format_total_amount_portfolio_text,
 )
 

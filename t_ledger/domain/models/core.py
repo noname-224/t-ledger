@@ -1,8 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
 
-from t_ledger.domain.enums.core import RiskLevel, CouponType
-from t_ledger.domain.enums.core import Currency, InstrumentType
+from t_ledger.domain.enums.core import CouponType, Currency, InstrumentType, RiskLevel
 from t_ledger.domain.models.base import BaseModelConfig
 from t_ledger.domain.models.value_objects import Money, Quantity
 

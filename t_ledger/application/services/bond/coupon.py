@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 
 from t_ledger.application.services.bond.base import BondServiceMixin
@@ -84,4 +84,4 @@ class BondCouponServiseImpl(BondServiceMixin, BondCouponServise):
         return coupons_in_asc_by_date[left - 1 :]
 
     def _now(self) -> datetime:  # noqa
-        return datetime.now(timezone.utc)
+        return datetime.now(UTC)

@@ -3,9 +3,9 @@ from typing import Any
 
 from t_ledger.domain.enums.core import MessageType
 from t_ledger.domain.models.core import (
-    Portfolio,
-    BondsByRiskLevel,
     AnnualCouponIncome,
+    BondsByRiskLevel,
+    Portfolio,
     PortfolioAllocation,
 )
 

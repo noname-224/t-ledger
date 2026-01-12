@@ -5,13 +5,13 @@ from t_ledger.domain.enums.core import InstrumentType
 from t_ledger.domain.exceptions import ApiClientError
 from t_ledger.domain.models.core import (
     Account,
-    Position,
-    Portfolio,
-    TotalAmountByInstrument,
     Bond,
     BondWithCouponSchedule,
     Coupon,
+    Portfolio,
+    Position,
     PositionBond,
+    TotalAmountByInstrument,
 )
 from t_ledger.domain.models.value_objects import Money, Quantity
 from t_ledger.infra.api.consts import INSTRUMENT_TYPES
@@ -48,7 +48,7 @@ def portfolio_from_api(response: dict[str, Any]) -> Portfolio:
             total_amounts_by_instrument=total_amounts_by_instrument,
         )
     except (AttributeError, KeyError, TypeError) as e:
-        raise ApiClientError(f"Error while parsing portfolio {e}")
+        raise ApiClientError("Error while parsing portfolio.") from e
 
 
 def bonds_from_api(
@@ -58,7 +58,7 @@ def bonds_from_api(
     try:
         result: list[Bond] = []
 
-        for position, response in zip(bond_positions, responses):
+        for position, response in zip(bond_positions, responses, strict=True):
             if isinstance(response, BaseException):
                 continue
 
@@ -76,8 +76,8 @@ def bonds_from_api(
             )
 
         return result
-    except (KeyError, TypeError):
-        raise ApiClientError("Error while parsing bonds")
+    except (KeyError, TypeError) as e:
+        raise ApiClientError("Error while parsing bonds.") from e
 
 
 def bonds_with_coupons_from_api(
@@ -87,7 +87,7 @@ def bonds_with_coupons_from_api(
     try:
         result: list[BondWithCouponSchedule] = []
 
-        for bond, response in zip(bonds, responses):
+        for bond, response in zip(bonds, responses, strict=True):
             if isinstance(response, BaseException):
                 continue
 
@@ -112,8 +112,8 @@ def bonds_with_coupons_from_api(
             )
 
         return result
-    except (KeyError, TypeError):
-        raise ApiClientError("Error while parsing bond coupons")
+    except (KeyError, TypeError) as e:
+        raise ApiClientError("Error while parsing bond coupons.") from e
 
 
 def bond_positions_from_api(response: dict[str, Any]) -> list[PositionBond]:
@@ -130,8 +130,8 @@ def bond_positions_from_api(response: dict[str, Any]) -> list[PositionBond]:
 def account_from_api(response: dict[str, Any]) -> Account:
     try:
         return Account(id=response["accounts"][0]["id"])
-    except (IndexError, KeyError, TypeError):
-        raise ApiClientError("Error while parsing account")
+    except (IndexError, KeyError, TypeError) as e:
+        raise ApiClientError("Error while parsing account.") from e
 
 
 def _money_amount(money_dict: dict[str, Any]) -> Money:

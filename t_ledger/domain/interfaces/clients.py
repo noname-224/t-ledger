@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from t_ledger.domain.models.core import Portfolio, Bond, BondWithCouponSchedule
+from t_ledger.domain.models.core import Bond, BondWithCouponSchedule, Portfolio
 
 
 class TinkoffApiClient(ABC):

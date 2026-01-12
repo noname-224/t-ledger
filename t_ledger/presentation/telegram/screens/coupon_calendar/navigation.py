@@ -1,4 +1,4 @@
-from t_ledger.domain.models.core import MonthlyCouponIncome, AnnualCouponIncome
+from t_ledger.domain.models.core import AnnualCouponIncome, MonthlyCouponIncome
 from t_ledger.presentation.shared.models import YearMonth
 
 
