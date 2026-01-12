@@ -89,8 +89,7 @@ class BondCouponServiseImpl(BondServiceMixin, BondCouponServise):
 
         return bonds_with_coupons
 
-    @staticmethod
-    def _get_coupons_from_prev_payment(coupons: list[Coupon]) -> list[Coupon]:
+    def _get_coupons_from_prev_payment(self, coupons: list[Coupon]) -> list[Coupon]:
         """
         Функция отделения актуальных купонов облигации.
 
@@ -105,9 +104,12 @@ class BondCouponServiseImpl(BondServiceMixin, BondCouponServise):
 
         while left <= right:
             mid = left + (right - left) // 2
-            if coupons_in_asc_by_date[mid].coupon_date > datetime.now(timezone.utc):
+            if coupons_in_asc_by_date[mid].coupon_date > self._now():
                 right = mid - 1
             else:
                 left = mid + 1
 
         return coupons_in_asc_by_date[left - 1 :]
+
+    def _now(self) -> datetime:  # noqa
+        return datetime.now(timezone.utc)
