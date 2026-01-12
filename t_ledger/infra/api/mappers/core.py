@@ -1,3 +1,4 @@
+from decimal import Decimal
 from typing import Any
 
 from t_ledger.domain.enums.core import InstrumentType
@@ -23,9 +24,9 @@ def portfolio_from_api(response: dict[str, Any]) -> Portfolio:
                 position_uid=position["positionUid"],
                 instrument_uid=position["instrumentUid"],
                 instrument_type=position["instrumentType"],
-                current_price=Money.from_api(position["currentPrice"]),
-                quantity=Quantity.from_api(position["quantity"]),
-                daily_yield=Money.from_api(position["dailyYield"]),
+                current_price=_money_amount(position["currentPrice"]),
+                quantity=_quantity_value(position["quantity"]),
+                daily_yield=_money_amount(position["dailyYield"]),
             )
             for position in response.get("positions", [])
         ]
@@ -33,7 +34,7 @@ def portfolio_from_api(response: dict[str, Any]) -> Portfolio:
         total_amounts_by_instrument = [
             TotalAmountByInstrument(
                 instrument_type=enum_type,
-                total_amount=Money.from_api(response[json_field]),
+                total_amount=_money_amount(response[json_field]),
             )
             for json_field, enum_type in INSTRUMENT_TYPES.items()
             if json_field in response
@@ -42,8 +43,8 @@ def portfolio_from_api(response: dict[str, Any]) -> Portfolio:
         return Portfolio(
             account_id=response["accountId"],
             positions=positions,
-            total_amount=Money.from_api(response["totalAmountPortfolio"]),
-            daily_yield=Money.from_api(response["dailyYield"]),
+            total_amount=_money_amount(response["totalAmountPortfolio"]),
+            daily_yield=_money_amount(response["dailyYield"]),
             total_amounts_by_instrument=total_amounts_by_instrument,
         )
     except (AttributeError, KeyError, TypeError) as e:
@@ -94,7 +95,7 @@ def bonds_with_coupons_from_api(
                 Coupon(
                     coupon_date=event["couponDate"],
                     coupon_type=event["couponType"],
-                    amount_per_bond=Money.from_api(event["payOneBond"]),
+                    amount_per_bond=_money_amount(event["payOneBond"]),
                     bond_name=bond.name,
                     bond_quantity=bond.quantity,
                 )
@@ -119,7 +120,7 @@ def bond_positions_from_api(response: dict[str, Any]) -> list[PositionBond]:
     return [
         PositionBond(
             instrument_uid=position["instrumentUid"],
-            quantity=Quantity.from_api(position["quantity"]),
+            quantity=_quantity_value(position["quantity"]),
         )
         for position in response.get("positions", [])
         if position["instrumentType"] == InstrumentType.BOND
@@ -131,3 +132,16 @@ def account_from_api(response: dict[str, Any]) -> Account:
         return Account(id=response["accounts"][0]["id"])
     except (IndexError, KeyError, TypeError):
         raise ApiClientError("Error while parsing account")
+
+
+def _money_amount(money_dict: dict[str, Any]) -> Money:
+    return Money(
+        amount=Decimal(money_dict["units"]) + Decimal(money_dict["nano"]) / Decimal("1e9"),
+        currency=money_dict["currency"],
+    )
+
+
+def _quantity_value(quantity_dict: dict[str, Any]) -> Quantity:
+    return Quantity(
+        value=Decimal(quantity_dict["units"]) + Decimal(quantity_dict["nano"]) / Decimal("1e9")
+    )
