@@ -23,15 +23,8 @@ class TinkoffApiClientImpl(TinkoffApiClient):
         self.__session: ClientSession | None = None
 
     async def get_portfolio(self) -> Portfolio:
-        account = await self._fetch_account()
-
-        response = await self._request(
-            method=Method.POST,
-            endpoint=Endpoint.GET_PORTFOLIO,
-            json={"accountId": account.id, "currency": "RUB"},
-        )
-
-        return portfolio_from_api(response)
+        portfolio = await self._fetch_portfolio()
+        return portfolio_from_api(portfolio)
 
     async def get_bonds(self, instrument_uids: list[str]) -> list[Bond]:
         tasks = [
@@ -96,7 +89,7 @@ class TinkoffApiClientImpl(TinkoffApiClient):
 
             return await response.json()
 
-    async def _fetch_account(self) -> Account:
+    async def _get_account(self) -> Account:
         data = await self._request(
             method=Method.POST,
             endpoint=Endpoint.GET_ACCOUNTS,
@@ -104,3 +97,12 @@ class TinkoffApiClientImpl(TinkoffApiClient):
         )
 
         return account_from_api(data)
+
+    async def _fetch_portfolio(self) -> Portfolio:
+        account = await self._get_account()
+
+        return await self._request(
+            method=Method.POST,
+            endpoint=Endpoint.GET_PORTFOLIO,
+            json={"accountId": account.id, "currency": "RUB"},
+        )
