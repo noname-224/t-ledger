@@ -33,14 +33,16 @@ class TinkoffApiClientImpl(TinkoffApiClient):
         portfolio = await self._fetch_portfolio()
         return portfolio_from_api(portfolio)
 
-    async def get_bonds(self, instrument_uids: list[str]) -> list[Bond]:
+    async def get_bonds(self) -> list[Bond]:
+        bond_positions = await self._get_bond_positions()
+
         tasks = [
             self._request(
                 method=Method.POST,
                 endpoint=Endpoint.GET_BOND_BY,
-                json={"idType": INSTRUMENT_ID_TYPE_UID, "id": uid},
+                json={"idType": INSTRUMENT_ID_TYPE_UID, "id": position.instrument_uid},
             )
-            for uid in instrument_uids
+            for position in bond_positions
         ]
 
         responses: list[dict[str, Any] | BaseException] = await asyncio.gather(
@@ -48,7 +50,7 @@ class TinkoffApiClientImpl(TinkoffApiClient):
             return_exceptions=True,
         )
 
-        return bonds_from_api(responses, instrument_uids)
+        return bonds_from_api(responses, bond_positions)
 
     async def get_bonds_with_coupons(
         self, instrument_uids: list[str]

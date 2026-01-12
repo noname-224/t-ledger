@@ -59,12 +59,13 @@ def portfolio_from_api(response: dict[str, Any]) -> Portfolio:
 
 
 def bonds_from_api(
-    responses: list[dict[str, Any] | BaseException], instrument_uids: list[str]
+    responses: list[dict[str, Any] | BaseException],
+    bond_positions: list[PositionBond],
 ) -> list[Bond]:
     try:
         result: list[Bond] = []
 
-        for uid, response in zip(instrument_uids, responses):
+        for position, response in zip(bond_positions, responses):
             if isinstance(response, BaseException):
                 continue
 
@@ -73,10 +74,11 @@ def bonds_from_api(
             result.append(
                 Bond(
                     instrument_uid=instrument["uid"],
-                    currency=instrument["currency"],
                     name=instrument["name"],
+                    currency=instrument["currency"],
                     risk_level=instrument["riskLevel"],
                     country_of_risk=instrument["countryOfRisk"],
+                    quantity=position.quantity,
                 ),
             )
 
