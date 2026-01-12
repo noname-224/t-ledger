@@ -1,5 +1,6 @@
 from typing import Any
 
+from t_ledger.domain.enums.core import InstrumentType
 from t_ledger.domain.exceptions import ApiClientError
 from t_ledger.domain.models.core import (
     Account,
@@ -9,6 +10,7 @@ from t_ledger.domain.models.core import (
     Bond,
     BondWithCouponSchedule,
     Coupon,
+    PositionBond,
 )
 from t_ledger.domain.models.value_objects import Money, Quantity
 from t_ledger.infra.api.consts import INSTRUMENT_TYPES
@@ -108,3 +110,14 @@ def bonds_with_coupons_from_api(
         return result
     except (KeyError, TypeError):
         raise ApiClientError("Error while parsing bond coupons")
+
+
+def bond_positions_from_api(response: dict[str, Any]) -> list[PositionBond]:
+    return [
+        PositionBond(
+            instrument_uid=position["instrumentUid"],
+            quantity=Quantity.from_api(position["quantity"]),
+        )
+        for position in response.get("positions", [])
+        if position["instrumentType"] == InstrumentType.BOND
+    ]

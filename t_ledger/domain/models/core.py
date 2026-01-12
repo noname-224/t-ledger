@@ -21,6 +21,11 @@ class Position(BaseModelConfig):
     current_nkd: Money | None = None
 
 
+class PositionBond(BaseModelConfig):
+    instrument_uid: str
+    quantity: Quantity
+
+
 class TotalAmountByInstrument(BaseModelConfig):
     instrument_type: InstrumentType
     total_amount: Money
