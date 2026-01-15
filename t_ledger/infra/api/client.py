@@ -12,26 +12,40 @@ from t_ledger.domain.models.core import (
     Portfolio,
     PositionBond,
 )
+from t_ledger.infra.api.adapters.core import (
+    AccountFromTinkoffAPIDTOAdapter,
+    BondPositionsFromTinkoffAPIDTOAdapter,
+    BondsFromTinkoffAPIDTOAdapter,
+    BondsWithCouponsFromTinkoffAPIDTOAdapter,
+    PortfolioFromTinkoffAPIDTOAdapter,
+)
 from t_ledger.infra.api.consts import COUPONS_BY_BONDS_END_DATE, INSTRUMENT_ID_TYPE_UID
 from t_ledger.infra.api.enums import Endpoint, Method
-from t_ledger.infra.api.mappers.core import (
-    account_from_api,
-    bond_positions_from_api,
-    bonds_from_api,
-    bonds_with_coupons_from_api,
-    portfolio_from_api,
-)
 
 
 class TinkoffApiClientImpl(TinkoffApiClient):
-    def __init__(self, token: str, base_url: str) -> None:
+    def __init__(
+        self,
+        token: str,
+        base_url: str,
+        account_adapter: AccountFromTinkoffAPIDTOAdapter,
+        portfolio_adapter: PortfolioFromTinkoffAPIDTOAdapter,
+        bond_positions_adapter: BondPositionsFromTinkoffAPIDTOAdapter,
+        bonds_adapter: BondsFromTinkoffAPIDTOAdapter,
+        bonds_with_coupons_adapter: BondsWithCouponsFromTinkoffAPIDTOAdapter,
+    ) -> None:
         self._token = token
         self._base_url = base_url
         self.__session: ClientSession | None = None
+        self._account_adapter = account_adapter
+        self._portfolio_adapter = portfolio_adapter
+        self._bond_positions_adapter = bond_positions_adapter
+        self._bonds_adapter = bonds_adapter
+        self._bonds_with_coupons_adapter = bonds_with_coupons_adapter
 
     async def get_portfolio(self) -> Portfolio:
-        portfolio = await self._fetch_portfolio()
-        return portfolio_from_api(portfolio)
+        response = await self._fetch_portfolio()
+        return self._portfolio_adapter.convert(response)
 
     async def get_bonds(self) -> list[Bond]:
         bond_positions = await self._get_bond_positions()
@@ -50,7 +64,7 @@ class TinkoffApiClientImpl(TinkoffApiClient):
             return_exceptions=True,
         )
 
-        return bonds_from_api(responses, bond_positions)
+        return self._bonds_adapter.convert(responses, bond_positions)
 
     async def get_bonds_with_coupons(self) -> list[BondWithCouponSchedule]:
         bonds = await self.get_bonds()
@@ -69,7 +83,7 @@ class TinkoffApiClientImpl(TinkoffApiClient):
             return_exceptions=True,
         )
 
-        return bonds_with_coupons_from_api(responses, bonds)
+        return self._bonds_with_coupons_adapter.convert(responses, bonds)
 
     def _headers(self) -> dict[str, str]:
         return {"Authorization": f"Bearer {self._token}"}
@@ -99,15 +113,15 @@ class TinkoffApiClientImpl(TinkoffApiClient):
             return await response.json()
 
     async def _get_account(self) -> Account:
-        data = await self._request(
+        response = await self._request(
             method=Method.POST,
             endpoint=Endpoint.GET_ACCOUNTS,
             json={"status": "ACCOUNT_STATUS_ALL"},
         )
 
-        return account_from_api(data)
+        return self._account_adapter.convert(response)
 
-    async def _fetch_portfolio(self) -> Portfolio:
+    async def _fetch_portfolio(self) -> dict[str, Any]:
         account = await self._get_account()
 
         return await self._request(
@@ -117,5 +131,5 @@ class TinkoffApiClientImpl(TinkoffApiClient):
         )
 
     async def _get_bond_positions(self) -> list[PositionBond]:
-        portfolio = await self._fetch_portfolio()
-        return bond_positions_from_api(portfolio)
+        response = await self._fetch_portfolio()
+        return self._bond_positions_adapter.convert(response)
