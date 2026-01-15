@@ -12,73 +12,109 @@ from t_ledger.domain.models.core import (
 
 class BondCouponServiseImpl(BondServiceMixin, BondCouponServise):
     async def get_future_bond_payments(self) -> list[AnnualCouponIncome]:
-        coupons_by_bonds = await self._api_client.get_bonds_with_coupons()
+        bonds = await self._api_client.get_bonds_with_coupons()
+        if not bonds:
+            return []
 
-        coupons_by_year_month: dict[str, dict[str, list[Coupon]]] = {}
+        now = self._now()
+        all_future_coupons = []
 
-        for coupons_by_bond in coupons_by_bonds:
-            actual_coupons = self._get_coupons_from_prev_payment(coupons_by_bond.coupons)
+        for bond in bonds:
+            future = self._get_future_coupons(bond.coupons, now)
+            normalized = self._normalize_coupon_payment_amounts(future)
+            all_future_coupons.extend(normalized)
 
-            for i in range(1, len(actual_coupons)):
-                if actual_coupons[i].amount_per_bond.amount == Decimal("0"):
-                    actual_coupons[i].amount_per_bond = actual_coupons[i - 1].amount_per_bond
+        grouped = self._group_coupons_by_year_month(all_future_coupons)
+        return self._build_coupon_income_by_year(grouped)
 
-                coupons_by_year_month.setdefault(actual_coupons[i].payment_date.year, {}).setdefault(
-                    actual_coupons[i].payment_date.month, []
-                ).append(actual_coupons[i])
+    def _get_future_coupons(self, coupons: list[Coupon], now: datetime) -> list[Coupon]:  # noqa
+        """
+        Возвращает купоны, дата выплаты которых строго больше даты now.
+        Купоны возвращаются в порядке возрастания даты выплаты.
+        """
+        return sorted(
+            (coupon for coupon in coupons if coupon.payment_date > now),
+            key=lambda x: x.payment_date,
+        )
 
-        annual_incomes = []
+    def _normalize_coupon_payment_amounts(self, coupons: list[Coupon]) -> list[Coupon]:  # noqa
+        """
+        Нормализует значения купонных выплат.
+        Если amount_per_bond == 0, используется значение предыдущего купона.
+        """
+        if not coupons:
+            return []
+
+        normalized = []
+        prev_amount = None
+
+        for coupon in coupons:
+            amount = coupon.amount_per_bond
+
+            if amount.amount == Decimal("0") and prev_amount is not None:
+                amount = prev_amount
+
+            normalized.append(coupon.model_copy(update={"amount_per_bond": amount}))
+
+            prev_amount = amount
+
+        return normalized
+
+    def _group_coupons_by_year_month(  # noqa
+        self, coupons: list[Coupon]
+    ) -> dict[int, dict[int, list[Coupon]]]:
+        """Группирует купоны по году и месяцу выплаты."""
+        result: dict[int, dict[int, list[Coupon]]] = {}
+
+        for coupon in coupons:
+            result.setdefault(
+                coupon.payment_date.year,
+                {},
+            ).setdefault(
+                coupon.payment_date.month,
+                [],
+            ).append(coupon)
+
+        return result
+
+    def _build_coupon_income_by_year(  # noqa
+        self, coupons_by_year_month: dict[int, dict[int, list[Coupon]]]
+    ) -> list[AnnualCouponIncome]:
+        """
+        Агрегирует купоны, сгруппированные по годам и месяцам,
+        в список моделей AnnualCouponIncome.
+        """
+        yearly_coupon_incomes = []
 
         for year, months_data in coupons_by_year_month.items():
             monthly_incomes = []
-            year_total = Decimal("0")
+            year_total_income = Decimal("0")
 
             for month, coupons in months_data.items():
-                month_total = sum(
+                month_total_income = sum(
                     coupon.amount_per_bond.amount * coupon.bond_quantity.value for coupon in coupons
                 )
 
                 monthly_incomes.append(
                     MonthlyCouponIncome(
                         month=month,
-                        coupons=sorted(coupons, key=lambda x: x.coupon_date),
-                        total_income=month_total,
+                        coupons=sorted(coupons, key=lambda x: x.payment_date),
+                        total_income=month_total_income,
                     )
                 )
 
-                year_total += month_total
+                year_total_income += month_total_income
 
-            annual_incomes.append(
+            yearly_coupon_incomes.append(
                 AnnualCouponIncome(
                     year=year,
                     monthly_incomes=sorted(monthly_incomes, key=lambda x: x.month),
-                    total_income=year_total,
+                    total_income=year_total_income,
                 )
             )
 
-        return annual_incomes
-
-    def _get_coupons_from_prev_payment(self, coupons: list[Coupon]) -> list[Coupon]:
-        """
-        Функция отделения актуальных купонов облигации.
-
-        Разворачивает исходный список купонов, для неубывающего порядка.
-        Возвращает срез отсортированного списка купонов, начиная, со следующего,
-        после крайнего выплаченного купона, заканчивая концом этого списка.
-        Поиск начала среза происходит с помощью бинарного поиска.
-        """
-
-        coupons_in_asc_by_date = list(reversed(coupons))
-        left, right = 0, len(coupons_in_asc_by_date) - 1
-
-        while left <= right:
-            mid = left + (right - left) // 2
-            if coupons_in_asc_by_date[mid].payment_date > self._now():
-                right = mid - 1
-            else:
-                left = mid + 1
-
-        return coupons_in_asc_by_date[left - 1 :]
+        return yearly_coupon_incomes
 
     def _now(self) -> datetime:  # noqa
+        """Возвращает текущую дату с тайм-зоной."""
         return datetime.now(UTC)
