@@ -23,8 +23,8 @@ class BondCouponServiseImpl(BondServiceMixin, BondCouponServise):
                 if actual_coupons[i].amount_per_bond.amount == Decimal("0"):
                     actual_coupons[i].amount_per_bond = actual_coupons[i - 1].amount_per_bond
 
-                coupons_by_year_month.setdefault(actual_coupons[i].coupon_date.year, {}).setdefault(
-                    actual_coupons[i].coupon_date.month, []
+                coupons_by_year_month.setdefault(actual_coupons[i].payment_date.year, {}).setdefault(
+                    actual_coupons[i].payment_date.month, []
                 ).append(actual_coupons[i])
 
         annual_incomes = []
@@ -73,7 +73,7 @@ class BondCouponServiseImpl(BondServiceMixin, BondCouponServise):
 
         while left <= right:
             mid = left + (right - left) // 2
-            if coupons_in_asc_by_date[mid].coupon_date > self._now():
+            if coupons_in_asc_by_date[mid].payment_date > self._now():
                 right = mid - 1
             else:
                 left = mid + 1

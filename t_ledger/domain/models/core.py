@@ -59,10 +59,9 @@ class PortfolioAllocation(BaseModelConfig):
 
 
 class Coupon(BaseModelConfig):
-    coupon_date: datetime
     coupon_type: CouponType
+    payment_date: datetime
     amount_per_bond: Money
-
     bond_name: str
     bond_quantity: Quantity
 
@@ -70,7 +69,6 @@ class Coupon(BaseModelConfig):
 class BondWithCouponSchedule(BaseModelConfig):
     instrument_uid: str
     coupons: list[Coupon]
-
     name: str
     quantity: Quantity
 

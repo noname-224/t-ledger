@@ -118,7 +118,7 @@ class BondsWithCouponsFromTinkoffAPIDTOAdapter(
 
             coupons = [
                 Coupon(
-                    coupon_date=event["couponDate"],
+                    payment_date=event["couponDate"],
                     coupon_type=event["couponType"],
                     amount_per_bond=self._money_convert(event["payOneBond"]),
                     bond_name=bond.name,

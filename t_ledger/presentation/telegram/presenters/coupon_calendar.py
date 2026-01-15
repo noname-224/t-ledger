@@ -32,7 +32,7 @@ class CouponCalendarPresenter:
             amount = coupon.amount_per_bond.amount * coupon.bond_quantity.value
             lines.append(
                 format_coupon_line(
-                    day=coupon.coupon_date.day,
+                    day=coupon.payment_date.day,
                     name=coupon.bond_name,
                     amount=amount,
                     currency=coupon.amount_per_bond.currency,
