@@ -12,9 +12,6 @@ from t_ledger.domain.models.core import (
 
 class BondCouponServiseImpl(BondServiceMixin, BondCouponServise):
     async def get_future_bond_payments(self) -> list[AnnualCouponIncome]:
-        return await self._build_future_bond_payment()
-
-    async def _build_future_bond_payment(self) -> list[AnnualCouponIncome]:
         coupons_by_bonds = await self._api_client.get_bonds_with_coupons()
 
         coupons_by_year_month: dict[str, dict[str, list[Coupon]]] = {}

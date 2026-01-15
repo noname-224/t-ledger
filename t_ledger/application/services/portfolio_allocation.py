@@ -12,9 +12,6 @@ class PortfolioAllocationServiceImpl(PortfolioAllocationService):
         self._api_client = api_client
 
     async def get_portfolio_allocation(self) -> PortfolioAllocation:
-        return await self._build_portfolio_allocation()
-
-    async def _build_portfolio_allocation(self) -> PortfolioAllocation:
         portfolio = await self._api_client.get_portfolio()
 
         daily_yield_by_instrument: dict[InstrumentType, Decimal] = {}
