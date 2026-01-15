@@ -1,8 +1,7 @@
 from decimal import Decimal
 
-from t_ledger.domain.enums.core import RiskLevel
-from t_ledger.domain.enums.core import Currency, InstrumentType
-from t_ledger.presentation.shared.formatting.ui import currency_sign, bold
+from t_ledger.domain.enums.core import Currency, InstrumentType, RiskLevel
+from t_ledger.presentation.shared.formatting.ui import bold, currency_sign
 
 
 def format_total_amount_portfolio_text(

@@ -3,11 +3,12 @@ from decimal import Decimal
 from t_ledger.domain.enums.core import Currency
 from t_ledger.presentation.shared.formatting.ui import (
     bold,
-    monospace,
-    cut_line,
     currency_sign,
+    cut_line,
+    monospace,
     underlined,
 )
+
 
 MONTH_NAMES = {
     1: "ЯНВАРЬ",

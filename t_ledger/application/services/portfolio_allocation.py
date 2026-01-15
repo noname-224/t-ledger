@@ -15,17 +15,18 @@ class PortfolioAllocationServiceImpl(PortfolioAllocationService):
         return await self._build_portfolio_allocation()
 
     async def _build_portfolio_allocation(self) -> PortfolioAllocation:
-        portfolio = await self._api_client.fetch_portfolio()
+        portfolio = await self._api_client.get_portfolio()
 
-        daily_yield_by_instrument: dict[InstrumentType, Money] = {}
+        daily_yield_by_instrument: dict[InstrumentType, Decimal] = {}
 
+        # TODO а может быть такое что валюта инструмента не `RUB`
         for position in portfolio.positions:
             daily_yield_by_instrument[position.instrument_type] = (
                 daily_yield_by_instrument.get(
                     position.instrument_type,
-                    Money(amount=Decimal("0"), currency=position.daily_yield.currency),
+                    Decimal("0"),
                 )
-                + position.daily_yield
+                + position.daily_yield.amount
             )
 
         instrument_allocations = sorted(
@@ -36,10 +37,13 @@ class PortfolioAllocationServiceImpl(PortfolioAllocationService):
                     allocation_ratio=(
                         instrument_amount.total_amount.amount / portfolio.total_amount.amount
                     ),
-                    daily_yield=daily_yield_by_instrument[instrument_amount.instrument_type],
+                    daily_yield=Money(
+                        amount=daily_yield_by_instrument[instrument_amount.instrument_type],
+                        currency=instrument_amount.total_amount.currency,
+                    ),
                 )
                 for instrument_amount in portfolio.total_amounts_by_instrument
-                if instrument_amount.total_amount.amount > Decimal("0")
+                if instrument_amount.total_amount.is_positive
             ),
             key=lambda x: x.total_amount.amount,
             reverse=True,

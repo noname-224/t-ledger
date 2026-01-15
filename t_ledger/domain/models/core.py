@@ -1,8 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
 
-from t_ledger.domain.enums.core import RiskLevel, CouponType
-from t_ledger.domain.enums.core import Currency, InstrumentType
+from t_ledger.domain.enums.core import CouponType, Currency, InstrumentType, RiskLevel
 from t_ledger.domain.models.base import BaseModelConfig
 from t_ledger.domain.models.value_objects import Money, Quantity
 
@@ -18,7 +17,11 @@ class Position(BaseModelConfig):
     current_price: Money
     quantity: Quantity
     daily_yield: Money
-    current_nkd: Money | None = None
+
+
+class PositionBond(BaseModelConfig):
+    instrument_uid: str
+    quantity: Quantity
 
 
 class TotalAmountByInstrument(BaseModelConfig):
@@ -47,7 +50,7 @@ class Bond(BaseModelConfig):
     name: str
     country_of_risk: str
     risk_level: RiskLevel
-    quantity: Quantity | None = None
+    quantity: Quantity
 
 
 class PortfolioAllocation(BaseModelConfig):
@@ -60,16 +63,16 @@ class Coupon(BaseModelConfig):
     coupon_type: CouponType
     amount_per_bond: Money
 
-    bond_name: str | None = None
-    bond_quantity: Quantity | None = None
+    bond_name: str
+    bond_quantity: Quantity
 
 
 class BondWithCouponSchedule(BaseModelConfig):
     instrument_uid: str
     coupons: list[Coupon]
 
-    name: str | None = None
-    quantity: Quantity | None = None
+    name: str
+    quantity: Quantity
 
 
 class MonthlyCouponIncome(BaseModelConfig):

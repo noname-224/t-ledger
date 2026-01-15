@@ -8,4 +8,4 @@ class PortfolioServiceImpl(PortfolioService):
         self._api_client = api_client
 
     async def get_portfolio(self) -> Portfolio:
-        return await self._api_client.fetch_portfolio()
+        return await self._api_client.get_portfolio()

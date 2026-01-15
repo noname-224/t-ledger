@@ -1,13 +1,13 @@
 from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.types import Message
-from dependency_injector.wiring import inject, Provide
+from dependency_injector.wiring import Provide, inject
 
 from t_ledger.containers import Container
 from t_ledger.domain.interfaces.services import (
-    PortfolioService,
-    PortfolioAllocationService,
     BondRiskService,
+    PortfolioAllocationService,
+    PortfolioService,
 )
 from t_ledger.presentation.telegram.contracts.commands import BotCommandOption
 from t_ledger.presentation.telegram.contracts.messages import BotMessageOption

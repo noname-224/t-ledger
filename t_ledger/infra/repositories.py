@@ -1,4 +1,4 @@
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from t_ledger.domain.enums.core import MessageType
@@ -16,7 +16,7 @@ class InMemoryMessageRepository(MessageRepository):
             return None
 
         message_id, message_data, saved_at = data
-        if saved_at + self._ttl < datetime.now(timezone.utc):
+        if saved_at + self._ttl < datetime.now(UTC):
             del self._storage[message_type]
             return None
 
@@ -25,4 +25,4 @@ class InMemoryMessageRepository(MessageRepository):
     async def save_message(
         self, message_type: MessageType, message_id: int, message_data: Any
     ) -> None:
-        self._storage[message_type] = (message_id, message_data, datetime.now(timezone.utc))
+        self._storage[message_type] = (message_id, message_data, datetime.now(UTC))
