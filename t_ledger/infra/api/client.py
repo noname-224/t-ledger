@@ -59,7 +59,7 @@ class TinkoffApiClientImpl(TinkoffApiClient):
             for position in bond_positions
         ]
 
-        responses: list[dict[str, Any] | BaseException] = await asyncio.gather(
+        responses: list[dict[str, Any] | Exception] = await asyncio.gather(
             *tasks,
             return_exceptions=True,
         )
@@ -78,7 +78,7 @@ class TinkoffApiClientImpl(TinkoffApiClient):
             for bond in bonds
         ]
 
-        responses: list[dict[str, Any] | BaseException] = await asyncio.gather(
+        responses: list[dict[str, Any] | Exception] = await asyncio.gather(
             *tasks,
             return_exceptions=True,
         )
