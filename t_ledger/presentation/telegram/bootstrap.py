@@ -14,9 +14,7 @@ async def run_bot() -> None:
     )
 
     dp = Dispatcher()
-    dp.message.outer_middleware(
-        AccessMiddleware(settings.tgbot.allowed_user_ids)
-    )
+    dp.message.outer_middleware(AccessMiddleware(settings.tgbot.allowed_user_ids))
     register_routers(dp)
 
     await bot.delete_webhook(drop_pending_updates=True)

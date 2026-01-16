@@ -1,11 +1,13 @@
 from datetime import datetime
 from decimal import Decimal
 
-from t_ledger.domain.enums.core import RiskLevel, CouponType
-from t_ledger.domain.enums.currency import Currency
-from t_ledger.domain.enums.instrument import InstrumentType
+from t_ledger.domain.enums.core import CouponType, Currency, InstrumentType, RiskLevel
 from t_ledger.domain.models.base import BaseModelConfig
 from t_ledger.domain.models.value_objects import Money, Quantity
+
+
+class Account(BaseModelConfig):
+    id: int
 
 
 class Position(BaseModelConfig):
@@ -15,7 +17,11 @@ class Position(BaseModelConfig):
     current_price: Money
     quantity: Quantity
     daily_yield: Money
-    current_nkd: Money | None = None
+
+
+class PositionBond(BaseModelConfig):
+    instrument_uid: str
+    quantity: Quantity
 
 
 class TotalAmountByInstrument(BaseModelConfig):
@@ -35,7 +41,7 @@ class Portfolio(BaseModelConfig):
     positions: list[Position]
     total_amount: Money
     daily_yield: Money
-    total_amounts_by_active_instrument: list[TotalAmountByInstrument]
+    total_amounts_by_instrument: list[TotalAmountByInstrument]
 
 
 class Bond(BaseModelConfig):
@@ -44,7 +50,7 @@ class Bond(BaseModelConfig):
     name: str
     country_of_risk: str
     risk_level: RiskLevel
-    quantity: Quantity | None = None
+    quantity: Quantity
 
 
 class PortfolioAllocation(BaseModelConfig):
@@ -53,18 +59,18 @@ class PortfolioAllocation(BaseModelConfig):
 
 
 class Coupon(BaseModelConfig):
-    bond_name: str
-    quantity: Quantity
-
-    coupon_date: datetime
     coupon_type: CouponType
+    payment_date: datetime
     amount_per_bond: Money
+    bond_name: str
+    bond_quantity: Quantity
 
 
 class BondWithCouponSchedule(BaseModelConfig):
+    instrument_uid: str
+    coupons: list[Coupon]
     name: str
     quantity: Quantity
-    coupons: list[Coupon]
 
 
 class MonthlyCouponIncome(BaseModelConfig):

@@ -1,5 +1,3 @@
-
-
 INPUT_PLACE_HOLDER = "Выберите пункт меню."
 WINDOW_UNAVAILABLE = "Это окно не доступно."
 ACCESS_DENIED = "Доступ запрещен."

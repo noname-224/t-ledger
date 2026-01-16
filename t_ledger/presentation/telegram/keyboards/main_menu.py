@@ -9,7 +9,7 @@ def main_menu_keyboard() -> ReplyKeyboardMarkup:
         keyboard=[
             [KeyboardButton(text=BotMessageOption.TOTAL_AMOUNT_PORTFOLIO)],
             [KeyboardButton(text=BotMessageOption.PORTFOLIO_ALLOCATION)],
-            [KeyboardButton(text=BotMessageOption.BOND_RISK_LEVELS)],
+            [KeyboardButton(text=BotMessageOption.BONDS_BY_RISK)],
             [KeyboardButton(text=BotMessageOption.FUTURE_BOND_PAYMENTS)],
         ],
         resize_keyboard=True,

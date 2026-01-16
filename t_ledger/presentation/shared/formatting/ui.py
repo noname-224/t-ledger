@@ -1,10 +1,14 @@
+from t_ledger.domain.enums.core import Currency
 
 
 # ─────────────────────────
 # Text formatting
 # ─────────────────────────
-
 def cut_line(line: str, max_len: int = 12, fill: str = "."):
+    """
+    Обрезает строку до слова, которое вмещается в заданную максимальную длину,
+    и добавляет заполнитель.
+    """
     if len(line) <= max_len:
         return line
 
@@ -12,7 +16,7 @@ def cut_line(line: str, max_len: int = 12, fill: str = "."):
         if (space_idx := line.rfind(" ")) != -1:
             line = line[:space_idx]
         else:
-            return line[:max_len - 2] + fill * 2
+            return line[: max_len - 2] + fill * 2
     return line + fill * (max_len - len(line))
 
 
@@ -32,9 +36,10 @@ def monospace(text: str) -> str:
 # Currency
 # ─────────────────────────
 
-def currency_sign(currency: str) -> str:
+
+def currency_sign(currency: Currency) -> str:
     return {
-        "EUR": "€",
-        "RUB": "₽",
-        "USD": "$",
+        Currency.EUR: "€",
+        Currency.RUB: "₽",
+        Currency.USD: "$",
     }.get(currency, "¤")

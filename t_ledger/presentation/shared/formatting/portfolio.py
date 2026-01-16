@@ -1,9 +1,7 @@
 from decimal import Decimal
 
-from t_ledger.domain.enums.core import RiskLevel
-from t_ledger.domain.enums.currency import Currency
-from t_ledger.domain.enums.instrument import InstrumentType
-from t_ledger.presentation.shared.formatting.ui import currency_sign, bold
+from t_ledger.domain.enums.core import Currency, InstrumentType, RiskLevel
+from t_ledger.presentation.shared.formatting.ui import bold, currency_sign
 
 
 def format_total_amount_portfolio_text(
@@ -13,8 +11,10 @@ def format_total_amount_portfolio_text(
     daily_yield: Decimal,
 ) -> str:
     sign = currency_sign(currency)
-    return (f"💰 Общая стоимость: {total_amount:,.2f} {sign}\n"
-            f"{_format_daily_yield_label(daily_yield)} {daily_yield:,.2f} {sign}\n")
+    return (
+        f"💰 Общая стоимость: {total_amount:,.2f} {sign}\n"
+        f"{_format_daily_yield_label(daily_yield)} {daily_yield:,.2f} {sign}\n"
+    )
 
 
 def format_alloc_block(
@@ -28,10 +28,12 @@ def format_alloc_block(
     instr_name = _instrument_name(instr_type)
     sign = currency_sign(currency)
 
-    return (f"{bold(instr_name)}\n"
-            f"💰 Общая стоимость: {amount:,.2f} {sign}\n"
-            f"📊 % аллокации: {alloc_ratio * 100:.2f}%\n"
-            f"{_format_daily_yield_label(daily_yield)}: {daily_yield:,.2f} {sign}")
+    return (
+        f"{bold(instr_name)}\n"
+        f"💰 Общая стоимость: {amount:,.2f} {sign}\n"
+        f"📊 % аллокации: {alloc_ratio * 100:.2f}%\n"
+        f"{_format_daily_yield_label(daily_yield)}: {daily_yield:,.2f} {sign}"
+    )
 
 
 def format_risk_level_title(risk_level: RiskLevel) -> str:
@@ -55,14 +57,13 @@ def _risk_level_text(level: RiskLevel | str) -> str:
     }.get(level, "⚠️ Уровень риска не определен:")
 
 
-
 def _instrument_name(instr_type: InstrumentType) -> str:
     return {
-        "BOND": "ОБЛИГАЦИИ",
-        "CURRENCY": "ВАЛЮТЫ",
-        "ETF": "БИРЖЕВЫЕ ФОНДЫ",
-        "FUTURES": "ФЬЮЧЕРСЫ",
-        "OPTION": "ОПЦИОНЫ",
-        "SHARE": "АКЦИИ",
-        "SP": "СТРУКТУРНЫЕ ПРОДУКТЫ",
+        InstrumentType.BOND: "ОБЛИГАЦИИ",
+        InstrumentType.CURRENCY: "ВАЛЮТЫ",
+        InstrumentType.ETF: "БИРЖЕВЫЕ ФОНДЫ",
+        InstrumentType.FUTURES: "ФЬЮЧЕРСЫ",
+        InstrumentType.OPTION: "ОПЦИОНЫ",
+        InstrumentType.SHARE: "АКЦИИ",
+        InstrumentType.SP: "СТРУКТУРНЫЕ ПРОДУКТЫ",
     }.get(instr_type, "...")

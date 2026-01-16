@@ -1,11 +1,13 @@
 from t_ledger.domain.models.core import MonthlyCouponIncome
-from t_ledger.presentation.shared.formatting.coupon_calendar import format_coupon_line, \
-    format_month_title, format_month_total
+from t_ledger.presentation.shared.formatting.coupon_calendar import (
+    format_coupon_line,
+    format_month_title,
+    format_month_total,
+)
 from t_ledger.presentation.shared.models import YearMonth
 
 
 class CouponCalendarPresenter:
-
     def render_month(self, ym: YearMonth, month_data: MonthlyCouponIncome) -> str:
         lines = []  # noqa
 
@@ -23,15 +25,14 @@ class CouponCalendarPresenter:
             month=ym.month,
         )
 
-
     def _render_coupons(self, month_data: MonthlyCouponIncome) -> list[str]:  # noqa
         lines = []
 
         for coupon in month_data.coupons:
-            amount = coupon.amount_per_bond.amount * coupon.quantity.value
+            amount = coupon.amount_per_bond.amount * coupon.bond_quantity.value
             lines.append(
                 format_coupon_line(
-                    day=coupon.coupon_date.day,
+                    day=coupon.payment_date.day,
                     name=coupon.bond_name,
                     amount=amount,
                     currency=coupon.amount_per_bond.currency,

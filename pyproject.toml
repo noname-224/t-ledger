@@ -20,8 +20,64 @@ requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [dependency-groups]
-dev = [
+test = [
     "pytest (>=9.0.2,<10.0.0)",
     "pytest-asyncio (>=1.3.0,<2.0.0)",
     "pytest-mock (>=3.15.1,<4.0.0)"
 ]
+dev = [
+    "ruff (>=0.14.10,<0.15.0)"
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+exclude = [
+    ".venv",
+    "__pycache__",
+    ".pytest_cache",
+    ".ruff_cache",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "F",  # pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
+    "UP", # pyupgrade
+]
+
+ignore = ["E203"]
+
+[tool.ruff.lint.isort]
+# === PROJECT STRUCTURE ===
+known-first-party = ["t_ledger"]
+section-order = [
+  "future",
+  "standard-library",
+  "third-party",
+  "first-party",
+  "local-folder"
+]
+
+# === STRICT SORTING ===
+force-sort-within-sections = true
+order-by-type = true
+case-sensitive = false
+
+# === IMPORT FORMAT ===
+combine-as-imports = false
+force-single-line = false
+split-on-trailing-comma = true
+force-wrap-aliases = true
+
+# === EMPTY LINES ===
+lines-after-imports = 2
+
+# === RELATIVE IMPORTS ===
+relative-imports-order = "closest-to-furthest"
+
+# === ENFORCEMENT ===
+force-to-top = ["__future__"]

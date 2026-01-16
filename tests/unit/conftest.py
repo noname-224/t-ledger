@@ -20,4 +20,5 @@ def mocked_request_params(mocker: MockerFixture):
         session.request.return_value = context_manager
 
         return session, "", "", {}
+
     return _factory
