@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 from decimal import Decimal
 
-from t_ledger.application.services.bond.base import BondServiceMixin
+from t_ledger.domain.interfaces.clients import TinkoffApiClient
 from t_ledger.domain.interfaces.services import BondCouponServise
 from t_ledger.domain.models.core import (
     AnnualCouponIncome,
@@ -10,7 +10,10 @@ from t_ledger.domain.models.core import (
 )
 
 
-class BondCouponServiseImpl(BondServiceMixin, BondCouponServise):
+class BondCouponServiseImpl(BondCouponServise):
+    def __init__(self, api_client: TinkoffApiClient):
+        self._api_client = api_client
+
     async def get_future_bond_payments(self) -> list[AnnualCouponIncome]:
         bonds = await self._api_client.get_bonds_with_coupons()
         if not bonds:
