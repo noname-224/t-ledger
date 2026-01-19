@@ -11,6 +11,8 @@ async def test_get_portfolio_allocation(mock_api_client):
 
     portfolio_allocation = await service.get_portfolio_allocation()
 
+    assert portfolio_allocation
+
     # 1. Список инструментов отсортирван в `DESC`
     # 2. Все типы инструментов в результате имеют общую сумму большую нуля
     for i in range(1, len(portfolio_allocation.instrument_allocations)):
@@ -19,3 +21,9 @@ async def test_get_portfolio_allocation(mock_api_client):
             >= portfolio_allocation.instrument_allocations[i].total_amount.amount
         )
         assert portfolio_allocation.instrument_allocations[i].total_amount.amount > Decimal("0")
+
+    # 3. Сумма всех коэффициентов распределения равна 1.0
+    assert sum(
+        instrument_allocation.allocation_ratio
+        for instrument_allocation in portfolio_allocation.instrument_allocations
+    ) == Decimal("1")
