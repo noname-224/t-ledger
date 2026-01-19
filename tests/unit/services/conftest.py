@@ -1,3 +1,4 @@
+from datetime import UTC, datetime
 from unittest import mock
 
 import pytest
@@ -5,6 +6,7 @@ import pytest
 from t_ledger.infra.api.adapters.core import (
     BondPositionsFromTinkoffAPIDTOAdapter,
     BondsFromTinkoffAPIDTOAdapter,
+    BondsWithCouponsFromTinkoffAPIDTOAdapter,
     PortfolioFromTinkoffAPIDTOAdapter,
 )
 
@@ -138,10 +140,166 @@ def mock_bonds(mock_raw_bonds, mock_bond_positions):
 
 
 @pytest.fixture(scope="session")
-def mock_api_client(mock_portfolio, mock_bonds):
+def mock_raw_coupons():
+    return [
+        {
+            # ===== TEST BOND FIXED 2028 (10 шт.)=====
+            "events": [
+                {
+                    "couponDate": "2026-04-25T00:00:00Z",
+                    "couponType": "COUPON_TYPE_FIX",
+                    "payOneBond": {"currency": "rub", "nano": 340000000, "units": "20"},
+                },
+                {
+                    "couponDate": "2026-03-26T00:00:00Z",
+                    "couponType": "COUPON_TYPE_FIX",
+                    "payOneBond": {"currency": "rub", "nano": 340000000, "units": "20"},
+                },
+                {
+                    "couponDate": "2026-02-24T00:00:00Z",
+                    "couponType": "COUPON_TYPE_FIX",
+                    "payOneBond": {"currency": "rub", "nano": 340000000, "units": "20"},
+                },
+                # --- купоны ниже уже выплачены и не идут в рассчет
+                {
+                    "couponDate": "2026-01-25T00:00:00Z",
+                    "couponType": "COUPON_TYPE_FIX",
+                    "payOneBond": {"currency": "rub", "nano": 340000000, "units": "20"},
+                },
+                {
+                    "couponDate": "2025-12-26T00:00:00Z",
+                    "couponType": "COUPON_TYPE_FIX",
+                    "payOneBond": {"currency": "rub", "nano": 340000000, "units": "20"},
+                },
+                {
+                    "couponDate": "2025-11-26T00:00:00Z",
+                    "couponType": "COUPON_TYPE_FIX",
+                    "payOneBond": {"currency": "rub", "nano": 340000000, "units": "20"},
+                },
+                {
+                    "couponDate": "2025-10-27T00:00:00Z",
+                    "couponType": "COUPON_TYPE_FIX",
+                    "payOneBond": {"currency": "rub", "nano": 340000000, "units": "20"},
+                },
+                {
+                    "couponDate": "2025-09-27T00:00:00Z",
+                    "couponType": "COUPON_TYPE_FIX",
+                    "payOneBond": {"currency": "rub", "nano": 340000000, "units": "20"},
+                },
+                {
+                    "couponDate": "2025-08-28T00:00:00Z",
+                    "couponType": "COUPON_TYPE_FIX",
+                    "payOneBond": {"currency": "rub", "nano": 340000000, "units": "20"},
+                },
+            ]
+        },
+        # ===== TEST BOND FLOATING 2029 (15 шт.)=====
+        {
+            "events": [
+                {
+                    "couponDate": "2026-03-25T00:00:00Z",
+                    "couponType": "COUPON_TYPE_FLOATING",
+                    "payOneBond": {"currency": "", "nano": 0, "units": "0"},
+                },
+                # --- купоны ниже уже выплачены и не идут в рассчет
+                {
+                    "couponDate": "2025-12-24T00:00:00Z",
+                    "couponType": "COUPON_TYPE_FLOATING",
+                    "payOneBond": {"currency": "rub", "nano": 0, "units": "41"},
+                },
+                {
+                    "couponDate": "2025-09-24T00:00:00Z",
+                    "couponType": "COUPON_TYPE_FLOATING",
+                    "payOneBond": {"currency": "rub", "nano": 90000000, "units": "46"},
+                },
+            ]
+        },
+        # ===== TEST BOND VARIABLE 2030 (20 шт.)=====
+        {
+            "events": [
+                {
+                    "couponDate": "2026-04-29T00:00:00Z",
+                    "couponType": "COUPON_TYPE_VARIABLE",
+                    "payOneBond": {"currency": "", "nano": 0, "units": "0"},
+                },
+                {
+                    "couponDate": "2026-03-30T00:00:00Z",
+                    "couponType": "COUPON_TYPE_VARIABLE",
+                    "payOneBond": {"currency": "", "nano": 0, "units": "0"},
+                },
+                {
+                    "couponDate": "2026-02-28T00:00:00Z",
+                    "couponType": "COUPON_TYPE_VARIABLE",
+                    "payOneBond": {"currency": "", "nano": 0, "units": "0"},
+                },
+                {
+                    "couponDate": "2026-01-29T00:00:00Z",
+                    "couponType": "COUPON_TYPE_VARIABLE",
+                    "payOneBond": {"currency": "rub", "nano": 120000000, "units": "12"},
+                },
+                # --- купоны ниже уже выплачены и не идут в рассчет
+                {
+                    "couponDate": "2025-12-30T00:00:00Z",
+                    "couponType": "COUPON_TYPE_VARIABLE",
+                    "payOneBond": {"currency": "rub", "nano": 120000000, "units": "12"},
+                },
+                {
+                    "couponDate": "2025-11-30T00:00:00Z",
+                    "couponType": "COUPON_TYPE_VARIABLE",
+                    "payOneBond": {"currency": "rub", "nano": 120000000, "units": "12"},
+                },
+                {
+                    "couponDate": "2025-10-31T00:00:00Z",
+                    "couponType": "COUPON_TYPE_VARIABLE",
+                    "payOneBond": {"currency": "rub", "nano": 120000000, "units": "12"},
+                },
+                {
+                    "couponDate": "2025-10-01T00:00:00Z",
+                    "couponType": "COUPON_TYPE_VARIABLE",
+                    "payOneBond": {"currency": "rub", "nano": 120000000, "units": "12"},
+                },
+                {
+                    "couponDate": "2025-09-01T00:00:00Z",
+                    "couponType": "COUPON_TYPE_VARIABLE",
+                    "payOneBond": {"currency": "rub", "nano": 120000000, "units": "12"},
+                },
+                {
+                    "couponDate": "2025-08-02T00:00:00Z",
+                    "couponType": "COUPON_TYPE_VARIABLE",
+                    "payOneBond": {"currency": "rub", "nano": 120000000, "units": "12"},
+                },
+            ]
+        },
+    ]
+
+
+@pytest.fixture(scope="session")
+def mock_bonds_with_coupons(mock_raw_coupons, mock_bonds):
+    adapter = BondsWithCouponsFromTinkoffAPIDTOAdapter()
+    return adapter.convert(mock_raw_coupons, mock_bonds)
+
+
+@pytest.fixture(scope="session")
+def mock_api_client(mock_portfolio, mock_bonds, mock_bonds_with_coupons):
     mock_client = mock.AsyncMock()
 
     mock_client.get_portfolio.return_value = mock_portfolio
     mock_client.get_bonds.return_value = mock_bonds
+    mock_client.get_bonds_with_coupons.return_value = mock_bonds_with_coupons
 
     return mock_client
+
+
+@pytest.fixture
+def mock_now(monkeypatch):
+    from t_ledger.application.services.bond.coupon import BondCouponServiseImpl
+
+    fixed_time = datetime(2026, 1, 25, tzinfo=UTC)
+
+    monkeypatch.setattr(
+        BondCouponServiseImpl,
+        "_now",
+        lambda self: fixed_time,
+    )
+
+    return fixed_time
