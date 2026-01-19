@@ -8,6 +8,7 @@ from t_ledger.domain.models.core import (
     Coupon,
     MonthlyCouponIncome,
 )
+from t_ledger.domain.models.value_objects import Money
 
 
 class BondCouponServiseImpl(BondCouponServise):
@@ -23,24 +24,41 @@ class BondCouponServiseImpl(BondCouponServise):
         all_future_coupons = []
 
         for bond in bonds:
-            future = self._get_future_coupons(bond.coupons, now)
-            normalized = self._normalize_coupon_payment_amounts(future)
+            last_paid_coupon, future = self._get_last_paid_and_future_coupons(bond.coupons, now)
+            normalized = self._normalize_coupon_payment_amounts(
+                future, last_paid_coupon.amount_per_bond if last_paid_coupon else None
+            )
             all_future_coupons.extend(normalized)
 
         grouped = self._group_coupons_by_year_month(all_future_coupons)
         return self._build_coupon_income_by_year(grouped)
 
-    def _get_future_coupons(self, coupons: list[Coupon], now: datetime) -> list[Coupon]:  # noqa
+    def _get_last_paid_and_future_coupons(  # noqa
+        self, coupons: list[Coupon], now: datetime
+    ) -> tuple[Coupon | None, list[Coupon]]:
         """
-        Возвращает купоны, дата выплаты которых строго больше даты now.
-        Купоны возвращаются в порядке возрастания даты выплаты.
+        Возвращает кортеж из последнего выплаченного купона (или None)
+        и списка будущих купонов, отсортированных по дате выплаты.
         """
-        return sorted(
-            (coupon for coupon in coupons if coupon.payment_date > now),
-            key=lambda x: x.payment_date,
-        )
+        if not coupons:
+            return None, []
 
-    def _normalize_coupon_payment_amounts(self, coupons: list[Coupon]) -> list[Coupon]:  # noqa
+        sorted_coupons = sorted(coupons, key=lambda x: x.payment_date)
+
+        last_paid_coupon = None
+        future = []
+
+        for coupon in sorted_coupons:
+            if coupon.payment_date <= now:
+                last_paid_coupon = coupon
+            else:
+                future.append(coupon)
+
+        return last_paid_coupon, future
+
+    def _normalize_coupon_payment_amounts(  # noqa
+        self, coupons: list[Coupon], initial_amount: Money | None = None
+    ) -> list[Coupon]:
         """
         Нормализует значения купонных выплат.
         Если amount_per_bond == 0, используется значение предыдущего купона.
@@ -49,7 +67,7 @@ class BondCouponServiseImpl(BondCouponServise):
             return []
 
         normalized = []
-        prev_amount = None
+        prev_amount = initial_amount
 
         for coupon in coupons:
             amount = coupon.amount_per_bond
