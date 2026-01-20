@@ -22,7 +22,7 @@ async def test_get_future_bond_payments(mock_api_client, mock_now):
 
         for month_data in year_data.monthly_incomes:
             for coupon in month_data.coupons:
-                # 1. Все будущие выплаты имеют валюту и отличную от нуля сумму
+                # 1. Все будущие выплаты имеют валюту и положительную сумму
                 assert coupon.amount_per_bond.currency != Currency.NONE
                 assert coupon.amount_per_bond.amount > Decimal("0")
 
