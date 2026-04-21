@@ -1,0 +1,90 @@
+from datetime import datetime
+from decimal import Decimal
+
+from t_ledger.domain.enums.core import CouponType, Currency, InstrumentType, RiskLevel
+from t_ledger.domain.models.base import BaseModelConfig
+from t_ledger.domain.models.value_objects import Money, Quantity
+
+
+class Account(BaseModelConfig):
+    id: int
+
+
+class Position(BaseModelConfig):
+    position_uid: str
+    instrument_uid: str
+    instrument_type: InstrumentType
+    current_price: Money
+    quantity: Quantity
+    daily_yield: Money
+
+
+class PositionBond(BaseModelConfig):
+    instrument_uid: str
+    quantity: Quantity
+
+
+class TotalAmountByInstrument(BaseModelConfig):
+    instrument_type: InstrumentType
+    total_amount: Money
+
+
+class PortfolioInstrumentAllocation(BaseModelConfig):
+    instrument_type: InstrumentType
+    total_amount: Money
+    allocation_ratio: Decimal
+    daily_yield: Money
+
+
+class Portfolio(BaseModelConfig):
+    account_id: str
+    positions: list[Position]
+    total_amount: Money
+    daily_yield: Money
+    total_amounts_by_instrument: list[TotalAmountByInstrument]
+
+
+class Bond(BaseModelConfig):
+    instrument_uid: str
+    currency: Currency
+    name: str
+    country_of_risk: str
+    risk_level: RiskLevel
+    quantity: Quantity
+
+
+class PortfolioAllocation(BaseModelConfig):
+    instrument_allocations: list[PortfolioInstrumentAllocation]
+    currency: Currency
+
+
+class Coupon(BaseModelConfig):
+    coupon_type: CouponType
+    payment_date: datetime
+    amount_per_bond: Money
+    bond_name: str
+    bond_quantity: Quantity
+
+
+class BondWithCouponSchedule(BaseModelConfig):
+    instrument_uid: str
+    coupons: list[Coupon]
+    name: str
+    quantity: Quantity
+
+
+class MonthlyCouponIncome(BaseModelConfig):
+    month: int
+    total_income: Decimal
+    coupons: list[Coupon]
+
+
+class AnnualCouponIncome(BaseModelConfig):
+    year: int
+    total_income: Decimal
+    monthly_incomes: list[MonthlyCouponIncome]
+
+
+class BondsByRiskLevel(BaseModelConfig):
+    risk_level: RiskLevel
+    bonds: list[Bond]
